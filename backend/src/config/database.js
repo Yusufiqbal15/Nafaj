@@ -192,6 +192,12 @@ const initDatabase = async (retries = 5) => {
   }
 };
 
-initDatabase();
+// .catch() is mandatory — Node 18 crashes the entire process on unhandled
+// promise rejections. initDatabase() has internal try/catch but this is a
+// safety net for any unexpected throw that escapes the function.
+initDatabase().catch((err) => {
+  console.error('═══ initDatabase threw unexpectedly (process kept alive) ═══');
+  console.error(err.message);
+});
 
 module.exports = pool;
