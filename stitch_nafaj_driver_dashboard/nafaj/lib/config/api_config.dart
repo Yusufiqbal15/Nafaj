@@ -1,19 +1,22 @@
 class ApiConfig {
   // Backend API Base URL
+  // Railway Production URL
+  static const String baseUrl = 'YOUR_RAILWAY_URL/api';
+
   // Use this for Chrome Web / Development
-  static const String baseUrl = 'http://127.0.0.1:5000/api';
-  
+  // static const String baseUrl = 'http://127.0.0.1:5000/api';
+
   // Use this for Android Emulator
   // static const String baseUrl = 'http://10.0.2.2:5000/api';
-  
+
   // Use this for iOS Simulator
   // static const String baseUrl = 'http://localhost:5000/api';
-  
+
   // Use this for Real Device (replace with your computer's IP)
   // static const String baseUrl = 'http://192.168.1.XXX:5000/api';
-  
+
   // Base URL for images
-  static const String imageBaseUrl = 'http://127.0.0.1:5000';
+  static const String imageBaseUrl = 'YOUR_RAILWAY_URL';
   
   // Auth Endpoints
   static const String userRegister = '/auth/user/register';
