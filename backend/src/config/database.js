@@ -85,6 +85,19 @@ function getDbConfig() {
   const dbName = resolveDbName();
   const host   = process.env.DB_HOST || 'localhost';
   const port   = parseInt(process.env.DB_PORT) || 3306;
+
+  // Detect public-proxy-from-inside-Railway misconfiguration.
+  // railway.internal is the private network; metro.proxy.rlwy.net is the public proxy.
+  // Railway blocks connections from its own services to the public proxy (causes TCP_INVALID_SYN).
+  const isPublicProxyFromRailway =
+    process.env.RAILWAY_ENVIRONMENT &&
+    host.includes('rlwy.net');
+  if (isPublicProxyFromRailway) {
+    console.warn('⚠ WARNING: DB_HOST points to Railway public proxy (*.rlwy.net)');
+    console.warn('  but this app is running INSIDE Railway.');
+    console.warn('  Set DB_HOST=mysql.railway.internal and DB_PORT=3306 in Railway Variables.');
+  }
+
   const useSSL = host && !host.includes('localhost') && !host.includes('127.0.0.1') && !host.includes('railway.internal');
 
   const cfg = {

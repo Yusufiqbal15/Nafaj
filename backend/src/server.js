@@ -1,51 +1,22 @@
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
+const cors    = require('cors');
 require('express-async-errors');
-const errorHandler = require('./middleware/errorHandler');
 
-// ─── Global crash guards ──────────────────────────────────────────────────────
-// Node 18 crashes the process on unhandled rejections by default.
-// Log and survive instead of dying silently.
+// ─── Global crash guards — must be first ─────────────────────────────────────
 process.on('unhandledRejection', (reason) => {
-  console.error('═══ UNHANDLED REJECTION (process kept alive) ═══');
-  console.error(reason);
+  console.error('UNHANDLED REJECTION:', reason);
 });
 process.on('uncaughtException', (err) => {
-  console.error('═══ UNCAUGHT EXCEPTION (process kept alive) ═══');
-  console.error(err);
+  console.error('UNCAUGHT EXCEPTION:', err.message);
+  // Do NOT exit — let Railway healthcheck keep succeeding
 });
 
-// ─── Port resolution ──────────────────────────────────────────────────────────
-// Railway always injects PORT. Never hardcode a port value here.
-const PORT = process.env.PORT || 8080;
+// ─── Port — Railway injects this, NEVER hardcode ─────────────────────────────
+const PORT = parseInt(process.env.PORT, 10) || 8080;
 
-// ─── Startup env log (visible in Railway deploy logs) ────────────────────────
-console.log('══════════════════════════════════════════════════');
-console.log('  NAFAJ BACKEND — STARTUP');
-console.log('══════════════════════════════════════════════════');
-console.log(`  process.env.PORT  : ${process.env.PORT || '(not injected by Railway)'}`);
-console.log(`  PORT resolved to  : ${PORT}`);
-console.log(`  NODE_ENV          : ${process.env.NODE_ENV  || '(not set)'}`);
-console.log(`  DB_HOST           : ${process.env.DB_HOST   || '(not set)'}`);
-console.log(`  DB_PORT           : ${process.env.DB_PORT   || '(not set)'}`);
-console.log(`  DB_NAME           : ${process.env.DB_NAME   || '(not set)'}`);
-console.log(`  DB_PASSWORD       : ${process.env.DB_PASSWORD ? '[SET]' : '[NOT SET]'}`);
-console.log('══════════════════════════════════════════════════');
-
+// ─── Express app ─────────────────────────────────────────────────────────────
 const app = express();
-
-// ─── Health check — registered FIRST, before anything else ───────────────────
-// Must respond instantly. Railway health check hits this during deploy.
-// If this times out, Railway marks deploy as failed and URL stops working.
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    port: PORT,
-    environment: process.env.NODE_ENV || 'unknown',
-  });
-});
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────
 app.use(cors({
@@ -53,7 +24,6 @@ app.use(cors({
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-  exposedHeaders: ['Content-Type', 'Authorization'],
   maxAge: 86400,
 }));
 app.options('*', cors());
@@ -71,44 +41,69 @@ app.use((req, res, next) => {
   next();
 });
 
-// ─── Routes ───────────────────────────────────────────────────────────────────
-const authRoutes    = require('./routes/auth');
-const jobRoutes     = require('./routes/jobs');
-const cartRoutes    = require('./routes/cart');
-const productRoutes = require('./routes/products');
-const orderRoutes   = require('./routes/orders');
-const adminRoutes   = require('./routes/admin');
-
-app.use('/api/auth',     authRoutes);
-app.use('/api/jobs',     jobRoutes);
-app.use('/api/cart',     cartRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/orders',   orderRoutes);
-app.use('/api/admin',    adminRoutes);
-
-// ─── 404 ──────────────────────────────────────────────────────────────────────
-app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
+// ─── Health check — registered before EVERYTHING else ────────────────────────
+// Railway hits this during deploy to decide if the service is healthy.
+// It must respond even if routes fail to load.
+app.get('/api/health', (_req, res) => {
+  res.json({ status: 'OK', port: PORT, ts: new Date().toISOString() });
 });
 
-// ─── Error handler ────────────────────────────────────────────────────────────
-app.use(errorHandler);
-
-// ─── Start listening ──────────────────────────────────────────────────────────
-// '0.0.0.0' is required on Railway — without it Node binds to 127.0.0.1
-// which Railway's reverse proxy cannot reach from outside the container.
+// ─── Start listening IMMEDIATELY — before loading routes ─────────────────────
+// Reason: if any require('./routes/...') throws synchronously (missing dep,
+// syntax error, bad import), app.listen() would never be called and Railway's
+// proxy gets TCP_INVALID_SYN on every health check hit.
+// By listening first, the process is always reachable.
 const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log('╔═══════════════════════════════════════════════════╗');
-  console.log('║  Nafaj Backend is LIVE                            ║');
-  console.log(`║  Listening on  : 0.0.0.0:${String(PORT).padEnd(24)}║`);
-  console.log(`║  NODE_ENV      : ${(process.env.NODE_ENV || 'development').padEnd(32)}║`);
-  console.log(`║  Health check  : http://0.0.0.0:${String(PORT).padEnd(5)}/api/health  ║`);
-  console.log('╚═══════════════════════════════════════════════════╝');
+  console.log('═══════════════════════════════════════════════════════');
+  console.log(`  NAFAJ BACKEND LISTENING`);
+  console.log(`  Interface  : 0.0.0.0`);
+  console.log(`  PORT (env) : ${process.env.PORT ?? '(Railway did not inject PORT)'}`);
+  console.log(`  PORT (used): ${PORT}`);
+  console.log(`  NODE_ENV   : ${process.env.NODE_ENV ?? 'not set'}`);
+  console.log(`  DB_HOST    : ${process.env.DB_HOST  ?? 'not set'}`);
+  console.log(`  DB_PORT    : ${process.env.DB_PORT  ?? 'not set'}`);
+  console.log(`  DB_NAME    : ${process.env.DB_NAME  ?? 'not set'}`);
+  console.log('═══════════════════════════════════════════════════════');
 });
 
-// Graceful shutdown — Railway sends SIGTERM before stopping a container
+server.on('error', (err) => {
+  console.error(`HTTP server error on port ${PORT}:`, err.message);
+});
+
+// ─── Load routes AFTER listening so startup is never blocked ─────────────────
+try {
+  const errorHandler  = require('./middleware/errorHandler');
+  const authRoutes    = require('./routes/auth');
+  const jobRoutes     = require('./routes/jobs');
+  const cartRoutes    = require('./routes/cart');
+  const productRoutes = require('./routes/products');
+  const orderRoutes   = require('./routes/orders');
+  const adminRoutes   = require('./routes/admin');
+
+  app.use('/api/auth',     authRoutes);
+  app.use('/api/jobs',     jobRoutes);
+  app.use('/api/cart',     cartRoutes);
+  app.use('/api/products', productRoutes);
+  app.use('/api/orders',   orderRoutes);
+  app.use('/api/admin',    adminRoutes);
+
+  app.use((_req, res) => res.status(404).json({ error: 'Route not found' }));
+  app.use(errorHandler);
+
+  console.log('✓ All routes loaded successfully');
+} catch (err) {
+  console.error('✗ Route loading failed — server still running, only health check will work:', err.message);
+
+  // Fallback 404 so the server doesn't hang on unregistered routes
+  app.use((_req, res) => res.status(503).json({
+    error: 'Server misconfiguration — routes failed to load',
+    detail: err.message,
+  }));
+}
+
+// ─── Graceful shutdown ────────────────────────────────────────────────────────
 process.on('SIGTERM', () => {
-  console.log('SIGTERM received — closing HTTP server gracefully');
+  console.log('SIGTERM received — shutting down gracefully');
   server.close(() => {
     console.log('HTTP server closed');
     process.exit(0);
