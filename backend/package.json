@@ -4,7 +4,7 @@
   "description": "Nafaj Marketplace Backend API",
   "main": "src/server.js",
   "scripts": {
-    "start": "node start-server.js",
+    "start": "node src/server.js",
     "start:simple": "node src/server.js",
     "dev": "nodemon src/server.js",
     "migrate": "node migrations/run.js",
