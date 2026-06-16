@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORS Test - Driver Orders</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #CC5500;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #E67322;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            border-left: 4px solid #CC5500;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        .success {
+            border-left-color: #10B981;
+            background: #f0fdf4;
+        }
+        .error {
+            border-left-color: #EF4444;
+            background: #fef2f2;
+        }
+        h1 {
+            color: #CC5500;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .status.online {
+            background: #10B981;
+            color: white;
+        }
+        .status.offline {
+            background: #EF4444;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            🚗 CORS Test - Driver Dashboard
+            <span id="status" class="status offline">Checking...</span>
+        </h1>
+        <p>This page tests if the backend API is accessible from a web browser (CORS enabled).</p>
+        
+        <div>
+            <button onclick="testHealth()">Test Health Check</button>
+            <button onclick="testDriverOrders()">Test Driver Orders</button>
+            <button onclick="clearResults()">Clear Results</button>
+        </div>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://127.0.0.1:5000/api';
+        
+        async function testHealth() {
+            showResult('Testing health endpoint...', 'info');
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('✅ Health Check Success!\n\n' + JSON.stringify(data, null, 2), 'success');
+                    document.getElementById('status').textContent = 'Online';
+                    document.getElementById('status').className = 'status online';
+                } else {
+                    showResult('❌ Health check failed\n\n' + JSON.stringify(data, null, 2), 'error');
+                }
+            } catch (error) {
+                showResult('❌ Connection Error:\n\n' + error.message + '\n\nMake sure backend is running on port 5000', 'error');
+                document.getElementById('status').textContent = 'Offline';
+                document.getElementById('status').className = 'status offline';
+            }
+        }
+
+        async function testDriverOrders() {
+            showResult('Fetching driver orders...', 'info');
+            try {
+                const response = await fetch(`${API_BASE}/orders/driver/orders?status=available`);
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    showResult(
+                        `✅ Driver Orders Success!\n\n` +
+                        `Found ${data.count} orders\n\n` +
+                        JSON.stringify(data, null, 2),
+                        'success'
+                    );
+                } else {
+                    showResult('❌ Failed to fetch orders\n\n' + JSON.stringify(data, null, 2), 'error');
+                }
+            } catch (error) {
+                showResult('❌ Connection Error:\n\n' + error.message + '\n\nCheck if:\n1. Backend is running on port 5000\n2. CORS is enabled\n3. No firewall blocking', 'error');
+            }
+        }
+
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = message;
+            resultDiv.className = `result ${type}`;
+        }
+
+        function clearResults() {
+            document.getElementById('result').textContent = '';
+            document.getElementById('result').className = 'result';
+        }
+
+        // Auto-test health on load
+        window.onload = () => {
+            testHealth();
+        };
+    </script>
+</body>
+</html>

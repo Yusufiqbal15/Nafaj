@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "578730057803",
+    "project_id": "nafaj-445a4",
+    "storage_bucket": "nafaj-445a4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:578730057803:android:30d07e6ee1656d4b64edce",
+        "android_client_info": {
+          "package_name": "com.example.nafaj"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCID149fWB36yIB7a92EmXYQ_bna434JTU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

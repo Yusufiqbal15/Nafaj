@@ -1,0 +1,42 @@
+CREATE TABLE IF NOT EXISTS orders (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  user_id INT NOT NULL,
+  vendor_id INT NOT NULL,
+  driver_id INT,
+  order_number VARCHAR(50) UNIQUE NOT NULL,
+  total_amount DECIMAL(10,2) NOT NULL,
+  delivery_fee DECIMAL(10,2) DEFAULT 0,
+  discount_amount DECIMAL(10,2) DEFAULT 0,
+  final_amount DECIMAL(10,2) NOT NULL,
+  payment_method ENUM('cash', 'card', 'wallet') DEFAULT 'cash',
+  payment_status ENUM('pending', 'paid', 'failed', 'refunded') DEFAULT 'pending',
+  order_status ENUM('pending', 'confirmed', 'preparing', 'ready', 'picked_up', 'delivered', 'cancelled') DEFAULT 'pending',
+  delivery_address TEXT NOT NULL,
+  delivery_latitude DECIMAL(10,8),
+  delivery_longitude DECIMAL(11,8),
+  notes TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (vendor_id) REFERENCES vendors(id),
+  FOREIGN KEY (driver_id) REFERENCES drivers(id),
+  INDEX idx_user_id (user_id),
+  INDEX idx_vendor_id (vendor_id),
+  INDEX idx_driver_id (driver_id),
+  INDEX idx_order_status (order_status),
+  INDEX idx_order_number (order_number)
+);
+
+CREATE TABLE IF NOT EXISTS order_items (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  order_id INT NOT NULL,
+  product_id INT NOT NULL,
+  quantity INT NOT NULL,
+  unit_price DECIMAL(10,2) NOT NULL,
+  total_price DECIMAL(10,2) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+  FOREIGN KEY (product_id) REFERENCES products(id),
+  INDEX idx_order_id (order_id),
+  INDEX idx_product_id (product_id)
+);

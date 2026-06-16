@@ -1,0 +1,170 @@
+[
+  {
+    "dir_name": "driver_login",
+    "class_name": "DriverLoginScreen",
+    "title": "driver_login",
+    "links": []
+  },
+  {
+    "dir_name": "driver_sign_up",
+    "class_name": "DriverSignUpScreen",
+    "title": "driver_sign_up",
+    "links": []
+  },
+  {
+    "dir_name": "job_creator_my_listings",
+    "class_name": "JobCreatorMyListingsScreen",
+    "title": "Nafaj - My Listings",
+    "links": []
+  },
+  {
+    "dir_name": "job_creator_post_a_job",
+    "class_name": "JobCreatorPostAJobScreen",
+    "title": "Nafaj - Post a New Job",
+    "links": []
+  },
+  {
+    "dir_name": "job_details_contact_info",
+    "class_name": "JobDetailsContactInfoScreen",
+    "title": "job_details_contact_info",
+    "links": []
+  },
+  {
+    "dir_name": "live_support_chat",
+    "class_name": "LiveSupportChatScreen",
+    "title": "Nafaj Live Support",
+    "links": []
+  },
+  {
+    "dir_name": "nafaj_category_grid_blinkit_style",
+    "class_name": "NafajCategoryGridBlinkitStyleScreen",
+    "title": "Nafaj Category Grid",
+    "links": []
+  },
+  {
+    "dir_name": "nafaj_home_exact_header_match",
+    "class_name": "NafajHomeExactHeaderMatchScreen",
+    "title": "Nafaj User Home Screen",
+    "links": []
+  },
+  {
+    "dir_name": "nafaj_job_listings_marketplace_orange_theme",
+    "class_name": "NafajJobListingsMarketplaceOrangeThemeScreen",
+    "title": "Nafaj Job Listings Marketplace",
+    "links": []
+  },
+  {
+    "dir_name": "nafaj_job_portal_selection",
+    "class_name": "NafajJobPortalSelectionScreen",
+    "title": "Nafaj Job Portal Selection",
+    "links": []
+  },
+  {
+    "dir_name": "nafaj_marketplace_home",
+    "class_name": "NafajMarketplaceHomeScreen",
+    "title": "Nafaj Marketplace Home",
+    "links": []
+  },
+  {
+    "dir_name": "nafaj_otp_verification_screen",
+    "class_name": "NafajOtpVerificationScreenScreen",
+    "title": "Nafaj OTP Verification",
+    "links": []
+  },
+  {
+    "dir_name": "nafaj_phone_login_screen",
+    "class_name": "NafajPhoneLoginScreenScreen",
+    "title": "nafaj_phone_login_screen",
+    "links": []
+  },
+  {
+    "dir_name": "nafaj_profile_setup_screen",
+    "class_name": "NafajProfileSetupScreenScreen",
+    "title": "Nafaj Profile Setup",
+    "links": []
+  },
+  {
+    "dir_name": "nafaj_side_menu_wallet",
+    "class_name": "NafajSideMenuWalletScreen",
+    "title": "Nafaj Side Menu &amp; Wallet",
+    "links": []
+  },
+  {
+    "dir_name": "nafaj_splash_screen_blinkit_style",
+    "class_name": "NafajSplashScreenBlinkitStyleScreen",
+    "title": "Nafaj Splash Screen",
+    "links": []
+  },
+  {
+    "dir_name": "nafaj_vendor_order_manager_1",
+    "class_name": "NafajVendorOrderManager1Screen",
+    "title": "Nafaj Vendor Order Manager",
+    "links": []
+  },
+  {
+    "dir_name": "nafaj_vendor_order_manager_2",
+    "class_name": "NafajVendorOrderManager2Screen",
+    "title": "Nafaj Vendor - Add New Item",
+    "links": []
+  },
+  {
+    "dir_name": "nafaj_wallet_top_up_options",
+    "class_name": "NafajWalletTopUpOptionsScreen",
+    "title": "Nafaj Wallet Top-Up",
+    "links": []
+  },
+  {
+    "dir_name": "nafaj_wallet_transactions",
+    "class_name": "NafajWalletTransactionsScreen",
+    "title": "Nafaj Wallet &amp; Transactions",
+    "links": []
+  },
+  {
+    "dir_name": "nafaj_welcome_professional",
+    "class_name": "NafajWelcomeProfessionalScreen",
+    "title": "Nafaj - The Digital Bridge",
+    "links": []
+  },
+  {
+    "dir_name": "product_feed_orange_header",
+    "class_name": "ProductFeedOrangeHeaderScreen",
+    "title": "Nafaj Product Feed",
+    "links": []
+  },
+  {
+    "dir_name": "quick_order_final_summary",
+    "class_name": "QuickOrderFinalSummaryScreen",
+    "title": "Quick Order: Final Summary",
+    "links": []
+  },
+  {
+    "dir_name": "quick_order_package_details",
+    "class_name": "QuickOrderPackageDetailsScreen",
+    "title": "Nafaj - Quick Order",
+    "links": []
+  },
+  {
+    "dir_name": "quick_order_vehicle_type",
+    "class_name": "QuickOrderVehicleTypeScreen",
+    "title": "quick_order_vehicle_type",
+    "links": []
+  },
+  {
+    "dir_name": "restaurant_menu_view_orange_header",
+    "class_name": "RestaurantMenuViewOrangeHeaderScreen",
+    "title": "restaurant_menu_view_orange_header",
+    "links": []
+  },
+  {
+    "dir_name": "vendor_login",
+    "class_name": "VendorLoginScreen",
+    "title": "Nafaj Vendor Login",
+    "links": []
+  },
+  {
+    "dir_name": "vendor_registration",
+    "class_name": "VendorRegistrationScreen",
+    "title": "Vendor Registration | Nafaj",
+    "links": []
+  }
+]
