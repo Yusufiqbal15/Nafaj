@@ -58,8 +58,8 @@ const testConnection = async (retries = 5) => {
     } catch (error) {
       console.error(`✗ Database Connection Attempt ${i + 1}/${retries} Failed:`, error.message);
       if (i === retries - 1) {
-        console.error('✗ Could not connect to database after all retries');
-        process.exit(1);
+        console.error('✗ Could not connect to database after all retries - server will keep running');
+        return false;
       }
       await new Promise(resolve => setTimeout(resolve, 3000));
     }
