@@ -13,7 +13,19 @@ const orderRoutes = require('./routes/orders');
 const adminRoutes = require('./routes/admin');
 
 const app = express();
-const PORT = process.env.PORT || process.env.SERVER_PORT || 5000;
+
+// Railway injects PORT automatically — always prefer it
+const PORT = process.env.PORT || process.env.SERVER_PORT || 8080;
+
+// Startup env check (visible in Railway logs)
+console.log('══════════════════════════════════════════════');
+console.log('  SERVER STARTUP');
+console.log(`  PORT (Railway)  : ${process.env.PORT      || '(not set by Railway)'}`);
+console.log(`  PORT (resolved) : ${PORT}`);
+console.log(`  NODE_ENV        : ${process.env.NODE_ENV  || '(not set)'}`);
+console.log(`  DB_HOST         : ${process.env.DB_HOST   || '(not set)'}`);
+console.log(`  DB_NAME         : ${process.env.DB_NAME   || '(not set)'}`);
+console.log('══════════════════════════════════════════════');
 
 // Middleware - Enable CORS for all origins (development mode)
 app.use(cors({
@@ -65,16 +77,14 @@ app.use((req, res) => {
 // Error handling middleware
 app.use(errorHandler);
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`
-╔════════════════════════════════════════════════╗
-║   Nafaj Backend Server Started                 ║
-║   Port: ${PORT}                              ║
-║   Environment: ${process.env.NODE_ENV}                    ║
-║   Database: ${process.env.DB_NAME}                       ║
-╚════════════════════════════════════════════════╝
-  `);
+// Bind to 0.0.0.0 so Railway's proxy can reach the container
+app.listen(PORT, '0.0.0.0', () => {
+  console.log('╔════════════════════════════════════════════════╗');
+  console.log('║   Nafaj Backend Server Started                 ║');
+  console.log(`║   Listening : 0.0.0.0:${PORT}                       ║`);
+  console.log(`║   NODE_ENV  : ${(process.env.NODE_ENV || 'development').padEnd(33)}║`);
+  console.log(`║   DB_NAME   : ${(process.env.DB_NAME  || '(not set)').padEnd(33)}║`);
+  console.log('╚════════════════════════════════════════════════╝');
 });
 
 module.exports = app;
