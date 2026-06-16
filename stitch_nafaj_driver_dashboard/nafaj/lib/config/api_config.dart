@@ -1,7 +1,7 @@
 class ApiConfig {
   // Backend API Base URL
   // Railway Production URL
-  static const String baseUrl = 'YOUR_RAILWAY_URL/api';
+  static const String baseUrl = 'https://nafaj-production.up.railway.app/api';
 
   // Use this for Chrome Web / Development
   // static const String baseUrl = 'http://127.0.0.1:5000/api';
@@ -16,7 +16,7 @@ class ApiConfig {
   // static const String baseUrl = 'http://192.168.1.XXX:5000/api';
 
   // Base URL for images
-  static const String imageBaseUrl = 'YOUR_RAILWAY_URL';
+  static const String imageBaseUrl = 'https://nafaj-production.up.railway.app';
   
   // Auth Endpoints
   static const String userRegister = '/auth/user/register';
