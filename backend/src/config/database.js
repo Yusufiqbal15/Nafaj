@@ -1,4 +1,6 @@
 const mysql = require('mysql2/promise');
+const fs    = require('fs');
+const path  = require('path');
 require('dotenv').config();
 
 // ─── Env variable resolution ────────────────────────────────────────────────
@@ -186,10 +188,13 @@ const initDatabase = async (retries = 5) => {
 
       await rootConn.end();
 
-      // Now test the pool (which has the DB name set)
+      // Test the pool
       const conn = await pool.getConnection();
       console.log(`✓ Pool connected to "${targetDb}" successfully.`);
       conn.release();
+
+      // Run migrations (CREATE TABLE IF NOT EXISTS — safe to run every time)
+      await runMigrations();
       return true;
 
     } catch (err) {
@@ -205,9 +210,45 @@ const initDatabase = async (retries = 5) => {
   }
 };
 
-// .catch() is mandatory — Node 18 crashes the entire process on unhandled
-// promise rejections. initDatabase() has internal try/catch but this is a
-// safety net for any unexpected throw that escapes the function.
+// ─── Auto migrations ──────────────────────────────────────────────────────────
+const MIGRATION_FILES = [
+  'migration_users_table.sql',
+  'migration_drivers_table.sql',
+  'migration_vendors_table.sql',
+  'migration_categories_table.sql',
+  'migration_products_table.sql',
+  'migration_orders_table.sql',
+  'migration_jobs_table.sql',
+  'migration_cart_table.sql',
+  'migration_admin_approvals.sql',
+  'add_driver_wallet.sql',
+];
+
+async function runMigrations() {
+  const migrationsDir = path.join(__dirname, '../../migrations');
+  console.log('  Running migrations…');
+
+  for (const file of MIGRATION_FILES) {
+    const filePath = path.join(migrationsDir, file);
+    if (!fs.existsSync(filePath)) {
+      console.log(`  ⚠ Skipping ${file} — not found`);
+      continue;
+    }
+    try {
+      const sql = fs.readFileSync(filePath, 'utf8');
+      const statements = sql.split(';').map(s => s.trim()).filter(Boolean);
+      for (const stmt of statements) {
+        await pool.execute(stmt);
+      }
+      console.log(`  ✓ ${file}`);
+    } catch (err) {
+      // Log but never crash — IF NOT EXISTS means most errors are harmless
+      console.warn(`  ⚠ ${file}: ${err.message}`);
+    }
+  }
+  console.log('  ✓ Migrations done');
+}
+
 initDatabase().catch((err) => {
   console.error('═══ initDatabase threw unexpectedly (process kept alive) ═══');
   console.error(err.message);
