@@ -24,7 +24,7 @@ class UserAuthController {
       if (!validatePhone(phone)) {
         return res.status(400).json({ 
           success: false,
-          error: 'Invalid phone number format. Use format: 03XXXXXXXXX' 
+          error: 'Invalid phone number. Must be at least 10 digits.'
         });
       }
 

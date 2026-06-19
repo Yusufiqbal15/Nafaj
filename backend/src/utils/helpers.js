@@ -24,9 +24,9 @@ const validateEmail = (email) => {
 };
 
 const validatePhone = (phone) => {
-  // Pakistani phone number validation
-  const phoneRegex = /^(\+92|0)?[3][0-9]{2}[0-9]{7}$/;
-  return phoneRegex.test(phone);
+  // Accept any international number — strip non-digits, require at least 10
+  const digits = phone.replace(/\D/g, '');
+  return digits.length >= 10;
 };
 
 module.exports = {
