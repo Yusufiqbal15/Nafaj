@@ -4,8 +4,11 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../services/order_service.dart';
+import '../providers/locale_provider.dart';
+import '../l10n/app_strings.dart';
 import 'package:dio/dio.dart';
 
 class DriverOrderTrackingDetailedScreen extends StatefulWidget {
@@ -26,41 +29,39 @@ class _DriverOrderTrackingDetailedScreenState
   int _currentStage = 0;
   bool _isUpdatingStatus = false;
   File? _selectedImage;
-  Uint8List? _selectedImageBytes; // For web
-  String? _selectedImageName; // For web
+  Uint8List? _selectedImageBytes;
+  String? _selectedImageName;
   final ImagePicker _picker = ImagePicker();
 
-  // Tracking stages
-  // Stage 0: no status update (driver heading to restaurant)
-  // Stage 1: sets picked_up + pickup photo
-  // Stage 2: sets out_for_delivery (no photo)
-  // Stage 3: sets pending_confirmation + delivery photo
-  final List<Map<String, dynamic>> _stages = [
+  AppStrings _s = AppStrings.direct(isArabic: false);
+  bool _isAr = false;
+
+  List<Map<String, dynamic>> get _stages => [
     {
-      'title': 'Heading to Pickup',
-      'subtitle': 'On your way to the restaurant',
+      'title': _s.stageTitleHeadingToPickup,
+      'subtitle': _s.stageSubtitleHeadingToPickup,
       'icon': Icons.directions_bike_rounded,
-      'status': null,          // no API call for this stage
+      'status': null,
       'requiresImage': false,
     },
     {
-      'title': 'Pickup Done',
-      'subtitle': 'Take a photo as proof of pickup',
+      'title': _s.stageTitlePickupDone,
+      'subtitle': _s.stageSubtitlePickupDone,
       'icon': Icons.camera_alt_rounded,
       'status': 'picked_up',
       'requiresImage': true,
       'imageType': 'pickup',
     },
     {
-      'title': 'Out for Delivery',
-      'subtitle': 'On the way to the customer',
+      'title': _s.stageTitleOutForDelivery,
+      'subtitle': _s.stageSubtitleOutForDelivery,
       'icon': Icons.delivery_dining_rounded,
       'status': 'out_for_delivery',
       'requiresImage': false,
     },
     {
-      'title': 'Upload Delivery Proof',
-      'subtitle': 'Take a photo — customer will confirm receipt',
+      'title': _s.stageTitleUploadDeliveryProof,
+      'subtitle': _s.stageSubtitleUploadDeliveryProof,
       'icon': Icons.verified_rounded,
       'status': 'pending_confirmation',
       'requiresImage': true,
@@ -117,7 +118,7 @@ class _DriverOrderTrackingDetailedScreenState
         }
       }
     } catch (e) {
-      _showError('Failed to pick image: $e');
+      _showError('${_s.isArabic ? 'فشل اختيار الصورة: ' : 'Failed to pick image: '}$e');
     }
   }
 
@@ -132,13 +133,12 @@ class _DriverOrderTrackingDetailedScreenState
         _selectedImageBytes = null;
         _selectedImageName = null;
       });
-      _showSuccess('On your way! Take a pickup photo when you arrive.');
+      _showSuccess(_s.onYourWayTakePhoto);
       return;
     }
 
-    // Check if image is required
     if (stage['requiresImage'] == true && _selectedImage == null && _selectedImageBytes == null) {
-      _showError('Please take/upload a photo to complete this stage');
+      _showError(_s.pleaseUploadPhotoForStage);
       return;
     }
 
@@ -164,15 +164,15 @@ class _DriverOrderTrackingDetailedScreenState
       });
 
       if (_currentStage >= _stages.length) {
-        _showSuccess('✅ Delivery proof uploaded! Waiting for customer confirmation.');
+        _showSuccess(_s.deliveryProofUploaded);
         await Future.delayed(const Duration(seconds: 2));
         if (mounted) Navigator.pop(context, true);
       } else {
-        _showSuccess('Stage completed!');
+        _showSuccess(_s.stageCompleted);
       }
     } catch (e) {
       setState(() => _isUpdatingStatus = false);
-      _showError('Failed to complete stage: $e');
+      _showError('${_s.isArabic ? 'فشل إكمال المرحلة: ' : 'Failed to complete stage: '}$e');
     }
   }
 
@@ -255,17 +255,23 @@ class _DriverOrderTrackingDetailedScreenState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final localeProvider = context.watch<LocaleProvider>();
+    _s = AppStrings.direct(isArabic: localeProvider.isArabic);
+    _isAr = localeProvider.isArabic;
+
+    return Directionality(
+      textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         backgroundColor: const Color(0xFFCC5500),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(_isAr ? Icons.arrow_forward : Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Order Tracking',
+          _s.orderTracking,
           style: GoogleFonts.plusJakartaSans(
             color: Colors.white,
             fontSize: 20,
@@ -308,7 +314,7 @@ class _DriverOrderTrackingDetailedScreenState
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Delivery to: ${widget.orderData['address'] ?? 'N/A'}',
+                    '${_s.deliveryTo}${widget.orderData['address'] ?? _s.naLabel}',
                     style: GoogleFonts.inter(
                       color: Colors.white70,
                       fontSize: 12,
@@ -388,7 +394,8 @@ class _DriverOrderTrackingDetailedScreenState
           ],
         ),
       ),
-    );
+    ), // Scaffold
+    ); // Directionality
   }
 
   Widget _buildCurrentStageCard(Map<String, dynamic> stage) {
@@ -478,7 +485,7 @@ class _DriverOrderTrackingDetailedScreenState
                     onPressed: _pickImage,
                     icon: const Icon(Icons.refresh),
                     label: Text(
-                      'Change Image',
+                      _s.changeImage,
                       style: GoogleFonts.inter(),
                     ),
                   ),
@@ -508,9 +515,7 @@ class _DriverOrderTrackingDetailedScreenState
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        kIsWeb 
-                            ? 'Tap to select ${stage['imageType']} image'
-                            : 'Tap to capture ${stage['imageType']} image',
+                        _s.tapToImageType(stage['imageType'] ?? '', kIsWeb),
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           color: const Color(0xFF6B7280),
@@ -518,7 +523,7 @@ class _DriverOrderTrackingDetailedScreenState
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Required to complete this stage',
+                        _s.requiredToCompleteStage,
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           color: const Color(0xFFEF4444),
@@ -557,8 +562,8 @@ class _DriverOrderTrackingDetailedScreenState
                     )
                   : Text(
                       stage['requiresImage'] == true && _selectedImage == null && _selectedImageBytes == null
-                          ? 'Upload Image to Continue'
-                          : 'Complete Stage',
+                          ? _s.uploadImageToContinue
+                          : _s.completeStage,
                       style: GoogleFonts.inter(
                         color: Colors.white,
                         fontSize: 16,
@@ -641,7 +646,7 @@ class _DriverOrderTrackingDetailedScreenState
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                'Done',
+                _s.stageDone,
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -657,7 +662,7 @@ class _DriverOrderTrackingDetailedScreenState
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                'Current',
+                _s.stageCurrent,
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,

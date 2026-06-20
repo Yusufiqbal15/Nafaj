@@ -1,17 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../providers/locale_provider.dart';
+import '../l10n/app_strings.dart';
 
 class DriverProfileScreen extends StatelessWidget {
   const DriverProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final localeProvider = context.watch<LocaleProvider>();
+    final s = AppStrings.direct(isArabic: localeProvider.isArabic);
+    final isAr = localeProvider.isArabic;
+
     const Color primaryColor = Color(0xFFCC5500);
     const Color bgColor = Color(0xFFFFFBF7);
     const Color darkSlate = Color(0xFF0F172A);
     const Color textGrey = Color(0xFF475569);
 
-    return Scaffold(
+    return Directionality(
+      textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
       backgroundColor: bgColor,
       body: SafeArea(
         child: CustomScrollView(
@@ -54,7 +63,7 @@ class DriverProfileScreen extends StatelessWidget {
                     const SizedBox(width: 16),
                     Expanded(
                       child: Text(
-                        'My Profile',
+                        s.myProfile,
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
@@ -162,7 +171,7 @@ class DriverProfileScreen extends StatelessWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            'Verified Driver',
+                            s.verifiedDriver,
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
@@ -181,7 +190,7 @@ class DriverProfileScreen extends StatelessWidget {
                       Row(
                         children: [
                           _buildProfileStat(
-                            'Rating',
+                            s.rating,
                             '4.9 ★',
                             primaryColor,
                             darkSlate,
@@ -189,7 +198,7 @@ class DriverProfileScreen extends StatelessWidget {
                           ),
                           _buildStatDivider(primaryColor),
                           _buildProfileStat(
-                            'Deliveries',
+                            s.deliveriesCount,
                             '342',
                             darkSlate,
                             darkSlate,
@@ -197,8 +206,8 @@ class DriverProfileScreen extends StatelessWidget {
                           ),
                           _buildStatDivider(primaryColor),
                           _buildProfileStat(
-                            'Member',
-                            '8 months',
+                            s.member,
+                            isAr ? '8 أشهر' : '8 months',
                             textGrey,
                             darkSlate,
                             textGrey,
@@ -250,7 +259,7 @@ class DriverProfileScreen extends StatelessWidget {
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            'Vehicle Information',
+                            s.vehicleInformation,
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -261,7 +270,7 @@ class DriverProfileScreen extends StatelessWidget {
                           GestureDetector(
                             onTap: () {},
                             child: Text(
-                              'Edit',
+                              s.edit,
                               style: GoogleFonts.inter(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
@@ -273,26 +282,26 @@ class DriverProfileScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       _buildInfoRow(
-                        'Vehicle Type',
-                        'Motorcycle',
+                        s.vehicleTypeLabel,
+                        isAr ? 'دراجة نارية' : 'Motorcycle',
                         textGrey,
                         darkSlate,
                       ),
                       _buildInfoRow(
-                        'Model',
+                        s.model,
                         'Bajaj Boxer 150',
                         textGrey,
                         darkSlate,
                       ),
                       _buildInfoRow(
-                        'Plate Number',
+                        s.plateNumber,
                         'KRT-2847',
                         textGrey,
                         darkSlate,
                       ),
                       _buildInfoRow(
-                        'License Expiry',
-                        'Dec 2026',
+                        s.licenseExpiry,
+                        isAr ? 'ديسمبر 2026' : 'Dec 2026',
                         textGrey,
                         darkSlate,
                       ),
@@ -341,7 +350,7 @@ class DriverProfileScreen extends StatelessWidget {
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            'Personal Information',
+                            s.personalInformation,
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -352,26 +361,26 @@ class DriverProfileScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       _buildInfoRow(
-                        'Full Name',
-                        'Mohamed Ibrahim Hassan',
+                        s.fullNameLabel,
+                        isAr ? 'محمد إبراهيم حسن' : 'Mohamed Ibrahim Hassan',
                         textGrey,
                         darkSlate,
                       ),
                       _buildInfoRow(
-                        'National ID',
+                        s.nationalIdLabel,
                         '****7891',
                         textGrey,
                         darkSlate,
                       ),
                       _buildInfoRow(
-                        'City',
-                        'Khartoum, Sudan',
+                        s.cityLabel,
+                        isAr ? 'الخرطوم، السودان' : 'Khartoum, Sudan',
                         textGrey,
                         darkSlate,
                       ),
                       _buildInfoRow(
-                        'Join Date',
-                        'July 15, 2025',
+                        s.joinDate,
+                        isAr ? '15 يوليو 2025' : 'July 15, 2025',
                         textGrey,
                         darkSlate,
                       ),
@@ -391,7 +400,7 @@ class DriverProfileScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Quick Actions',
+                      s.quickActions,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -401,8 +410,8 @@ class DriverProfileScreen extends StatelessWidget {
                     const SizedBox(height: 12),
                     _buildActionTile(
                       Icons.history_rounded,
-                      'Delivery History',
-                      'View all past deliveries',
+                      s.deliveryHistory,
+                      s.viewAllPastDeliveries,
                       const Color(0xFF10B981),
                       darkSlate,
                       textGrey,
@@ -416,8 +425,8 @@ class DriverProfileScreen extends StatelessWidget {
                     const SizedBox(height: 8),
                     _buildActionTile(
                       Icons.account_balance_wallet_rounded,
-                      'Wallet & Payments',
-                      'Check balance and settlements',
+                      s.walletAndPayments,
+                      s.checkBalanceSettlements,
                       primaryColor,
                       darkSlate,
                       textGrey,
@@ -428,8 +437,8 @@ class DriverProfileScreen extends StatelessWidget {
                     const SizedBox(height: 8),
                     _buildActionTile(
                       Icons.support_agent_rounded,
-                      'Support',
-                      'Get help from our team',
+                      s.supportAction,
+                      s.getHelpFromTeam,
                       const Color(0xFF3B82F6),
                       darkSlate,
                       textGrey,
@@ -440,8 +449,8 @@ class DriverProfileScreen extends StatelessWidget {
                     const SizedBox(height: 8),
                     _buildActionTile(
                       Icons.description_rounded,
-                      'Documents',
-                      'Manage your documents',
+                      s.documents,
+                      s.manageDocuments,
                       const Color(0xFF8B5CF6),
                       darkSlate,
                       textGrey,
@@ -450,8 +459,8 @@ class DriverProfileScreen extends StatelessWidget {
                     const SizedBox(height: 8),
                     _buildActionTile(
                       Icons.logout_rounded,
-                      'Log Out',
-                      'Sign out of your account',
+                      s.logOut,
+                      s.signOutAccount,
                       const Color(0xFFEF4444),
                       darkSlate,
                       textGrey,
@@ -474,8 +483,9 @@ class DriverProfileScreen extends StatelessWidget {
       ),
 
       // ── Bottom Nav ──
-      bottomNavigationBar: _buildDriverBottomNav(context, 3),
-    );
+      bottomNavigationBar: _buildDriverBottomNav(context, 3, s, isAr),
+    ), // Scaffold
+    ); // Directionality
   }
 
   Widget _buildProfileStat(
@@ -599,29 +609,29 @@ class DriverProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDriverBottomNav(BuildContext context, int currentIndex) {
+  Widget _buildDriverBottomNav(BuildContext context, int currentIndex, AppStrings s, bool isAr) {
     const Color primaryColor = Color(0xFFCC5500);
     const Color inactiveGrey = Color(0xFF94A3B8);
 
     final items = [
       {
         'icon': Icons.map_rounded,
-        'label': 'Map',
+        'label': s.navMap,
         'route': '/driver_dashboard_animated_3d',
       },
       {
         'icon': Icons.format_list_bulleted_rounded,
-        'label': 'History',
+        'label': s.navHistory,
         'route': '/driver_delivery_history',
       },
       {
         'icon': Icons.account_balance_wallet_rounded,
-        'label': 'Wallet',
+        'label': s.navWallet,
         'route': '/driver_wallet',
       },
       {
         'icon': Icons.person_rounded,
-        'label': 'Profile',
+        'label': s.navProfile,
         'route': '/driver_profile',
       },
     ];

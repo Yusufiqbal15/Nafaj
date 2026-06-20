@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../providers/locale_provider.dart';
 import '../l10n/app_strings.dart';
+import '../theme/nafaj_theme.dart';
 
 class NafajPhoneLoginScreen extends StatefulWidget {
   const NafajPhoneLoginScreen({super.key});
@@ -112,7 +113,7 @@ class _NafajPhoneLoginScreenState extends State<NafajPhoneLoginScreen>
     return Directionality(
       textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: const Color(0xFFFFFAF5),
+        backgroundColor: Nc.bgWarm,
         body: Stack(
           children: [
             // Warm orange gradient header with wave
@@ -127,14 +128,7 @@ class _NafajPhoneLoginScreenState extends State<NafajPhoneLoginScreen>
                     child: Container(
                       height: headerHeight + 30,
                       decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topRight,
-                          end: Alignment.bottomLeft,
-                          colors: [
-                            Color(0xFFFF8C00),
-                            Color(0xFFCC5500),
-                          ],
-                        ),
+                        gradient: Ng.header,
                       ),
                       child: Stack(
                         children: [
@@ -224,7 +218,7 @@ class _NafajPhoneLoginScreenState extends State<NafajPhoneLoginScreen>
                                   color: Colors.white, size: 13),
                               const SizedBox(width: 5),
                               Text(
-                                'نفج للتسوق',
+                                'نفاج للتسوق',
                                 style: GoogleFonts.notoSansArabic(
                                   color: Colors.white,
                                   fontSize: 11,
@@ -367,32 +361,21 @@ class _NafajPhoneLoginScreenState extends State<NafajPhoneLoginScreen>
   }
 
   Widget _formCard() {
-    final s = AppStrings.direct(
-        isArabic: context.read<LocaleProvider>().isArabic);
+    final s = AppStrings.direct(isArabic: context.read<LocaleProvider>().isArabic);
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFCC5500).withOpacity(0.08),
-            blurRadius: 30,
-            offset: const Offset(0, 8),
-          ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 15,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        gradient: Ng.warmCard,
+        borderRadius: BorderRadius.circular(Nr.card),
+        border: Border.all(color: Nc.borderLight),
+        boxShadow: Ns.elevated,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _fieldLabel(s.emailLabel),
           const SizedBox(height: 10),
-          _lightTextField(
+          NafajLightField(
             controller: _emailController,
             hint: 'user@example.com',
             icon: Icons.alternate_email_rounded,
@@ -404,18 +387,20 @@ class _NafajPhoneLoginScreenState extends State<NafajPhoneLoginScreen>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _fieldLabel(s.passwordLabel),
-              Text(
-                s.forgotPassword,
+              Text(s.forgotPassword,
                 style: GoogleFonts.notoSansArabic(
-                  color: const Color(0xFFCC5500),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+                    color: Nc.brand, fontSize: 12, fontWeight: FontWeight.w600)),
             ],
           ),
           const SizedBox(height: 10),
-          _lightPassField(),
+          NafajLightField(
+            controller: _passwordController,
+            hint: '••••••••',
+            icon: Icons.lock_rounded,
+            obscure: _obscurePassword,
+            showToggle: true,
+            onToggle: () => setState(() => _obscurePassword = !_obscurePassword),
+          ),
         ],
       ),
     );
@@ -424,211 +409,53 @@ class _NafajPhoneLoginScreenState extends State<NafajPhoneLoginScreen>
   Widget _fieldLabel(String text) => Text(
         text,
         style: GoogleFonts.notoSansArabic(
-          color: const Color(0xFF374151),
+          color: Nc.textSecondary,
           fontSize: 13,
           fontWeight: FontWeight.w600,
         ),
       );
 
-  Widget _lightTextField({
-    required TextEditingController controller,
-    required String hint,
-    required IconData icon,
-    bool ltr = false,
-    TextInputType? keyboard,
-  }) {
-    return Container(
-      height: 54,
-      decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: TextField(
-        controller: controller,
-        textDirection: ltr ? TextDirection.ltr : null,
-        textAlign: ltr ? TextAlign.left : TextAlign.right,
-        keyboardType: keyboard,
-        cursorColor: const Color(0xFFCC5500),
-        style: GoogleFonts.plusJakartaSans(
-          color: Colors.black,
-          fontSize: 15,
-          fontWeight: FontWeight.w500,
-        ),
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          hintText: hint,
-          hintStyle: GoogleFonts.plusJakartaSans(
-            color: const Color(0xFFD1D5DB),
-            fontSize: 14,
-          ),
-          prefixIcon: Icon(
-            icon,
-            color: const Color(0xFFCC5500).withOpacity(0.6),
-            size: 19,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _lightPassField() {
-    return Container(
-      height: 54,
-      decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: TextField(
-        controller: _passwordController,
-        obscureText: _obscurePassword,
-        cursorColor: const Color(0xFFCC5500),
-        style: GoogleFonts.plusJakartaSans(
-          color: Colors.black,
-          fontSize: 15,
-          fontWeight: FontWeight.w500,
-        ),
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          hintText: '••••••••',
-          hintStyle: GoogleFonts.plusJakartaSans(
-            color: const Color(0xFFD1D5DB),
-            fontSize: 20,
-            letterSpacing: 2,
-          ),
-          prefixIcon: Icon(
-            Icons.lock_rounded,
-            color: const Color(0xFFCC5500).withOpacity(0.6),
-            size: 19,
-          ),
-          suffixIcon: IconButton(
-            icon: Icon(
-              _obscurePassword
-                  ? Icons.visibility_rounded
-                  : Icons.visibility_off_rounded,
-              color: const Color(0xFF9CA3AF),
-              size: 19,
-            ),
-            onPressed: () =>
-                setState(() => _obscurePassword = !_obscurePassword),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _loginButton() {
-    final s = AppStrings.direct(
-        isArabic: context.read<LocaleProvider>().isArabic);
+    final s = AppStrings.direct(isArabic: context.read<LocaleProvider>().isArabic);
     return GestureDetector(
       onTapDown: (_) => _btnPressCtrl.forward(),
-      onTapUp: (_) {
-        _btnPressCtrl.reverse();
-        if (!_isLoading) _login();
-      },
+      onTapUp: (_) { _btnPressCtrl.reverse(); if (!_isLoading) _login(); },
       onTapCancel: () => _btnPressCtrl.reverse(),
       child: AnimatedBuilder(
         animation: _btnPressCtrl,
         builder: (_, child) => Transform.scale(
-          scale: 1.0 - _btnPressCtrl.value * 0.03,
-          child: child,
-        ),
-        child: Container(
-          width: double.infinity,
-          height: 58,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFFF7A00), Color(0xFFCC5500)],
-              begin: Alignment.centerRight,
-              end: Alignment.centerLeft,
-            ),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFCC5500).withOpacity(0.4),
-                blurRadius: 22,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Center(
-            child: _isLoading
-                ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(
-                        color: Colors.white, strokeWidth: 2.5),
-                  )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.login_rounded,
-                          color: Colors.white, size: 20),
-                      const SizedBox(width: 10),
-                      Text(
-                        s.loginBtn,
-                        style: GoogleFonts.notoSansArabic(
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-          ),
-        ),
+          scale: 1.0 - _btnPressCtrl.value * 0.03, child: child),
+        child: NafajButton(label: s.loginBtn, icon: Icons.login_rounded, isLoading: _isLoading, height: 58),
       ),
     );
   }
 
   Widget _footer() {
-    final s = AppStrings.direct(
-        isArabic: context.read<LocaleProvider>().isArabic);
+    final s = AppStrings.direct(isArabic: context.read<LocaleProvider>().isArabic);
     return Column(
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              s.noAccount,
-              style: GoogleFonts.notoSansArabic(
-                color: const Color(0xFF6B7280),
-                fontSize: 14,
-              ),
-            ),
+            Text(s.noAccount,
+                style: GoogleFonts.notoSansArabic(color: Nc.textHint, fontSize: 14)),
             GestureDetector(
               onTap: () => Navigator.pushNamed(context, '/user_sign_up'),
-              child: Text(
-                s.createAccount,
-                style: GoogleFonts.notoSansArabic(
-                  color: const Color(0xFFCC5500),
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              child: Text(s.createAccount,
+                  style: GoogleFonts.notoSansArabic(
+                      color: Nc.brand, fontSize: 14, fontWeight: FontWeight.bold)),
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.verified_user_rounded,
-                size: 13, color: Color(0xFFD1D5DB)),
-            const SizedBox(width: 6),
-            Text(
-              s.secureLogin,
-              style: GoogleFonts.notoSansArabic(
-                fontSize: 11,
-                color: const Color(0xFFD1D5DB),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+            Icon(Icons.shield_rounded, size: 12, color: Nc.borderLight),
+            const SizedBox(width: 5),
+            Text(s.secureLogin,
+                style: GoogleFonts.notoSansArabic(
+                    fontSize: 11, color: Nc.textHint, fontWeight: FontWeight.w500)),
           ],
         ),
       ],

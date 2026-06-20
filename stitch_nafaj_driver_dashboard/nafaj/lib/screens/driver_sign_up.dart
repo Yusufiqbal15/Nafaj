@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../services/api_service.dart';
+import '../providers/locale_provider.dart';
+import '../l10n/app_strings.dart';
 
 class DriverSignUpScreen extends StatefulWidget {
   const DriverSignUpScreen({super.key});
@@ -22,6 +25,9 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
   final TextEditingController _licenseController = TextEditingController();
   final TextEditingController _nationalIdController = TextEditingController();
 
+  late AppStrings _s;
+  late bool _isAr;
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -33,143 +39,142 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
     super.dispose();
   }
 
-  final List<String> _cities = [
-    'Khartoum',
-    'Omdurman',
-    'Khartoum North (Bahri)',
-    'Port Sudan',
-    'Wad Madani',
-  ];
-
   static const Color primaryColor = Color(0xFFCC5500);
   static const Color bgColor = Color(0xFFF8F7F5);
   static const Color darkSlate = Color(0xFF0F172A);
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: bgColor,
-      appBar: AppBar(
+    final localeProvider = context.watch<LocaleProvider>();
+    _s = AppStrings.direct(isArabic: localeProvider.isArabic);
+    _isAr = localeProvider.isArabic;
+
+    return Directionality(
+      textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
         backgroundColor: bgColor,
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: darkSlate),
-          onPressed: () {
-            if (_currentStep > 1) {
-              setState(() {
-                _currentStep--;
-              });
-            } else {
-              Navigator.pop(context);
-            }
-          },
-        ),
-        title: Text(
-          'Driver Registration',
-          style: GoogleFonts.plusJakartaSans(
-            color: darkSlate,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            letterSpacing: -0.5,
+        appBar: AppBar(
+          backgroundColor: bgColor,
+          elevation: 0,
+          centerTitle: true,
+          leading: IconButton(
+            icon: Icon(
+              _isAr ? Icons.arrow_forward_rounded : Icons.arrow_back_rounded,
+              color: darkSlate,
+            ),
+            onPressed: () {
+              if (_currentStep > 1) {
+                setState(() => _currentStep--);
+              } else {
+                Navigator.pop(context);
+              }
+            },
+          ),
+          title: Text(
+            _s.driverRegistration,
+            style: GoogleFonts.plusJakartaSans(
+              color: darkSlate,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -0.5,
+            ),
           ),
         ),
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Progress Header
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        _getStepTitle(),
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: darkSlate,
-                        ),
-                      ),
-                      Text(
-                        'Step $_currentStep of 3',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF475569),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    height: 8,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: primaryColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: FractionallySizedBox(
-                      alignment: Alignment.centerLeft,
-                      widthFactor: _currentStep / 3,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: primaryColor,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.all(16.0),
-                child: _buildCurrentStep(),
-              ),
-            ),
-
-            // Footer (Already have an account?) - Only on step 1
-            if (_currentStep == 1)
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Progress Header
               Container(
-                padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  border: Border(top: BorderSide(color: Color(0xFFF1F5F9))),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Column(
                   children: [
-                    Text(
-                      'Already have an account? ',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 14,
-                        color: const Color(0xFF475569),
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          _getStepTitle(),
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: darkSlate,
+                          ),
+                        ),
+                        Text(
+                          '${_s.stepOf3} $_currentStep ${_s.of3}',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF475569),
+                          ),
+                        ),
+                      ],
                     ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushReplacementNamed(context, '/driver_login');
-                      },
-                      child: Text(
-                        'Log in',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: primaryColor,
+                    const SizedBox(height: 12),
+                    Container(
+                      height: 8,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: FractionallySizedBox(
+                        alignment: _isAr ? Alignment.centerRight : Alignment.centerLeft,
+                        widthFactor: _currentStep / 3,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: primaryColor,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-          ],
+
+              Expanded(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.all(16.0),
+                  child: _buildCurrentStep(),
+                ),
+              ),
+
+              if (_currentStep == 1)
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    border: Border(top: BorderSide(color: Color(0xFFF1F5F9))),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        _s.alreadyHaveAccount,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 14,
+                          color: const Color(0xFF475569),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushReplacementNamed(context, '/driver_login');
+                        },
+                        child: Text(
+                          _s.logIn,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: primaryColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -178,11 +183,11 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
   String _getStepTitle() {
     switch (_currentStep) {
       case 1:
-        return 'Personal Details';
+        return _s.stepPersonalDetails;
       case 2:
-        return 'Document Submit';
+        return _s.stepDocumentSubmit;
       case 3:
-        return 'Confirm Details';
+        return _s.stepConfirmDetails;
       default:
         return '';
     }
@@ -205,14 +210,13 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header Area
         Padding(
           padding: const EdgeInsets.only(top: 4.0, bottom: 16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Become a Nafaj Driver',
+                _s.becomeNafajDriver,
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 30,
                   fontWeight: FontWeight.w800,
@@ -223,7 +227,7 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Enter your details to start earning on your own schedule.',
+                _s.driverSignUpSubtitle,
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 16,
                   color: const Color(0xFF475569),
@@ -235,83 +239,62 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
         ),
 
         const SizedBox(height: 8),
-        _buildLabel('Full Name'),
+        _buildLabel(_s.fullName),
         TextField(
           controller: _nameController,
+          textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
           style: GoogleFonts.plusJakartaSans(fontSize: 16, color: Colors.black),
           decoration: _inputDecoration(
-            hintText: 'Enter your full name',
+            hintText: _s.enterFullName,
             iconData: Icons.person_rounded,
             primaryColor: primaryColor,
           ),
         ),
         const SizedBox(height: 20),
 
-        _buildLabel('Email Address'),
+        _buildLabel(_s.emailLabel),
         TextField(
           controller: _emailController,
           keyboardType: TextInputType.emailAddress,
+          textDirection: TextDirection.ltr,
           style: GoogleFonts.plusJakartaSans(fontSize: 16, color: Colors.black),
           decoration: _inputDecoration(
-            hintText: 'Enter your email',
+            hintText: _s.enterEmail,
             iconData: Icons.email_rounded,
             primaryColor: primaryColor,
           ),
         ),
         const SizedBox(height: 20),
 
-        _buildLabel('Password'),
+        _buildLabel(_s.passwordLabel),
         TextField(
           controller: _passwordController,
           obscureText: true,
+          textDirection: TextDirection.ltr,
           style: GoogleFonts.plusJakartaSans(fontSize: 16, color: Colors.black),
           decoration: _inputDecoration(
-            hintText: 'Create strong password',
+            hintText: _s.createStrongPassword,
             iconData: Icons.lock_rounded,
             primaryColor: primaryColor,
           ),
         ),
         const SizedBox(height: 20),
 
-        _buildLabel('Phone Number'),
-        Row(
-          children: [
-            Container(
-              width: 80,
-              height: 56,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              child: Text(
-                '+249',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: darkSlate,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: TextField(
-                controller: _phoneController,
-                keyboardType: TextInputType.phone,
-                style: GoogleFonts.plusJakartaSans(fontSize: 16, color: darkSlate),
-                decoration: _inputDecoration(
-                  hintText: '9xx xxx xxx',
-                  iconData: Icons.call_rounded,
-                  primaryColor: primaryColor,
-                ),
-              ),
-            ),
-          ],
+        _buildLabel(_s.phoneNumber),
+        TextField(
+          controller: _phoneController,
+          keyboardType: TextInputType.phone,
+          textDirection: TextDirection.ltr,
+          style: GoogleFonts.plusJakartaSans(fontSize: 16, color: darkSlate),
+          decoration: _inputDecoration(
+            hintText: '+1234567890',
+            iconData: Icons.call_rounded,
+            primaryColor: primaryColor,
+          ),
         ),
         const SizedBox(height: 20),
 
-        _buildLabel('City / State (Sudan)'),
+        _buildLabel(_s.cityState),
         Container(
           height: 56,
           decoration: BoxDecoration(
@@ -329,8 +312,11 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
                   const Icon(Icons.location_on_rounded, color: Color(0xFF94A3B8)),
                   const SizedBox(width: 12),
                   Text(
-                    'Select your location',
-                    style: GoogleFonts.plusJakartaSans(fontSize: 16, color: const Color(0xFF94A3B8)),
+                    _s.selectLocation,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 16,
+                      color: const Color(0xFF94A3B8),
+                    ),
                   ),
                 ],
               ),
@@ -338,7 +324,7 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
                 padding: EdgeInsets.only(right: 16.0),
                 child: Icon(Icons.expand_more_rounded, color: Color(0xFF94A3B8)),
               ),
-              items: _cities.map((String city) {
+              items: _s.cities.map((String city) {
                 return DropdownMenuItem<String>(
                   value: city,
                   child: Row(
@@ -346,7 +332,10 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
                       const SizedBox(width: 16),
                       const Icon(Icons.location_on_rounded, color: Color(0xFF94A3B8)),
                       const SizedBox(width: 12),
-                      Text(city, style: GoogleFonts.plusJakartaSans(fontSize: 16, color: darkSlate)),
+                      Text(
+                        city,
+                        style: GoogleFonts.plusJakartaSans(fontSize: 16, color: darkSlate),
+                      ),
                     ],
                   ),
                 );
@@ -361,33 +350,30 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
         ),
         const SizedBox(height: 20),
 
-        _buildLabel('Vehicle Type'),
+        _buildLabel(_s.vehicleType),
         Row(
           children: [
             Expanded(
               child: _buildVehicleOption(
                 id: 'motorcycle',
-                label: 'Motorcycle',
+                label: _s.motorcycle,
                 icon: Icons.motorcycle_rounded,
-                primaryColor: primaryColor,
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: _buildVehicleOption(
                 id: 'rickshaw',
-                label: 'Rickshaw',
+                label: _s.rickshaw,
                 icon: Icons.electric_rickshaw_rounded,
-                primaryColor: primaryColor,
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: _buildVehicleOption(
                 id: 'car',
-                label: 'Car',
+                label: _s.car,
                 icon: Icons.directions_car_rounded,
-                primaryColor: primaryColor,
               ),
             ),
           ],
@@ -406,24 +392,31 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
                   _selectedCity == null ||
                   _selectedVehicle == null) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Please fill all fields')),
+                  SnackBar(content: Text(_s.fillAllFields)),
                 );
                 return;
               }
-              setState(() {
-                _currentStep = 2;
-              });
+              final rawPhone = _phoneController.text.trim().replaceAll(RegExp(r'\D'), '');
+              if (rawPhone.length < 10) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Phone number must be at least 10 digits')),
+                );
+                return;
+              }
+              setState(() => _currentStep = 2);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: primaryColor,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               elevation: 4,
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Next Step',
+                  _s.nextStep,
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -431,7 +424,10 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Icon(Icons.arrow_forward_rounded, color: Colors.white),
+                Icon(
+                  _isAr ? Icons.arrow_back_rounded : Icons.arrow_forward_rounded,
+                  color: Colors.white,
+                ),
               ],
             ),
           ),
@@ -450,7 +446,7 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Submit Documents',
+                _s.submitDocuments,
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
@@ -461,7 +457,7 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Please provide your identification and driving details.',
+                _s.documentsSubtitle,
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 16,
                   color: const Color(0xFF475569),
@@ -472,24 +468,26 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
           ),
         ),
 
-        _buildLabel('Driving License Number'),
+        _buildLabel(_s.drivingLicenseNumber),
         TextField(
           controller: _licenseController,
+          textDirection: TextDirection.ltr,
           style: GoogleFonts.plusJakartaSans(fontSize: 16, color: Colors.black),
           decoration: _inputDecoration(
-            hintText: 'Enter license number',
+            hintText: _s.enterLicenseNumber,
             iconData: Icons.badge_rounded,
             primaryColor: primaryColor,
           ),
         ),
         const SizedBox(height: 24),
 
-        _buildLabel('Nationality ID Number'),
+        _buildLabel(_s.nationalIdNumber),
         TextField(
           controller: _nationalIdController,
+          textDirection: TextDirection.ltr,
           style: GoogleFonts.plusJakartaSans(fontSize: 16, color: Colors.black),
           decoration: _inputDecoration(
-            hintText: 'Enter national ID',
+            hintText: _s.enterNationalId,
             iconData: Icons.credit_card_rounded,
             primaryColor: primaryColor,
           ),
@@ -501,26 +499,27 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
           height: 56,
           child: ElevatedButton(
             onPressed: () {
-              if (_licenseController.text.isEmpty || _nationalIdController.text.isEmpty) {
+              if (_licenseController.text.isEmpty ||
+                  _nationalIdController.text.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Please provide all documents')),
+                  SnackBar(content: Text(_s.provideAllDocuments)),
                 );
                 return;
               }
-              setState(() {
-                _currentStep = 3;
-              });
+              setState(() => _currentStep = 3);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: primaryColor,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               elevation: 4,
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Continue to Review',
+                  _s.continueToReview,
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -547,7 +546,7 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Confirm Details',
+                _s.confirmDetailsTitle,
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
@@ -558,7 +557,7 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Please review your details before submitting.',
+                _s.reviewBeforeSubmit,
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 16,
                   color: const Color(0xFF475569),
@@ -569,7 +568,6 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
           ),
         ),
 
-        // Summary Card
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
@@ -580,24 +578,25 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
                 color: Colors.black.withOpacity(0.02),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
-              )
+              ),
             ],
           ),
           child: Column(
             children: [
-              _buildSummaryRow(Icons.person, 'Full Name', _nameController.text),
+              _buildSummaryRow(Icons.person, _s.fullName, _nameController.text),
               const Divider(height: 1, color: Color(0xFFF1F5F9)),
-              _buildSummaryRow(Icons.email, 'Email', _emailController.text),
+              _buildSummaryRow(Icons.email, _s.summaryEmail, _emailController.text),
               const Divider(height: 1, color: Color(0xFFF1F5F9)),
-              _buildSummaryRow(Icons.phone, 'Phone', '+249 ${_phoneController.text}'),
+              _buildSummaryRow(Icons.phone, _s.summaryPhone, _phoneController.text),
               const Divider(height: 1, color: Color(0xFFF1F5F9)),
-              _buildSummaryRow(Icons.location_city, 'City', _selectedCity ?? ''),
+              _buildSummaryRow(Icons.location_city, _s.summaryCity, _selectedCity ?? ''),
               const Divider(height: 1, color: Color(0xFFF1F5F9)),
-              _buildSummaryRow(Icons.directions_car, 'Vehicle', _selectedVehicle?.toUpperCase() ?? ''),
+              _buildSummaryRow(Icons.directions_car, _s.summaryVehicle,
+                  _selectedVehicle?.toUpperCase() ?? ''),
               const Divider(height: 1, color: Color(0xFFF1F5F9)),
-              _buildSummaryRow(Icons.badge, 'License No.', _licenseController.text),
+              _buildSummaryRow(Icons.badge, _s.summaryLicense, _licenseController.text),
               const Divider(height: 1, color: Color(0xFFF1F5F9)),
-              _buildSummaryRow(Icons.credit_card, 'Nationality ID', _nationalIdController.text),
+              _buildSummaryRow(Icons.credit_card, _s.summaryNationalId, _nationalIdController.text),
             ],
           ),
         ),
@@ -611,20 +610,12 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
             onPressed: () async {
               setState(() => _isLoading = true);
               try {
-                // Format phone number to Pakistani format
-                String phone = _phoneController.text.trim().replaceAll(RegExp(r'[^\d]'), '');
-                if (phone.startsWith('249')) {
-                  phone = '0${phone.substring(3)}';
-                } else if (phone.startsWith('+249')) {
-                  phone = '0${phone.substring(4)}';
-                } else if (!phone.startsWith('0')) {
-                  phone = '0$phone';
-                }
+                String phone = _phoneController.text.trim();
 
-                // Split name into first and last name
                 final nameParts = _nameController.text.trim().split(' ');
                 final firstName = nameParts.first;
-                final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+                final lastName =
+                    nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
 
                 final result = await ApiService.driverRegister(
                   email: _emailController.text.trim(),
@@ -634,16 +625,15 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
                   lastName: lastName,
                   licenseNumber: _licenseController.text.trim(),
                   vehicleType: _selectedVehicle,
-                  vehiclePlate: '', // Can be added later
+                  vehiclePlate: '',
                 );
 
                 if (!mounted) return;
 
                 if (result['success']) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Registration successful! Awaiting admin approval.')),
+                    SnackBar(content: Text(_s.registrationSuccess)),
                   );
-                  // Navigate to pending approval screen — admin must approve before accessing dashboard
                   Navigator.pushNamedAndRemoveUntil(
                     context,
                     '/pending_approval',
@@ -652,37 +642,41 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
                   );
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(result['error'] ?? 'فشل إنشاء الحساب')),
+                    SnackBar(
+                        content: Text(result['error'] ?? _s.registrationFailed)),
                   );
                 }
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('خطأ: $e')),
+                    SnackBar(content: Text('${_s.errorPrefix}$e')),
                   );
                 }
               } finally {
-                if (mounted) {
-                  setState(() => _isLoading = false);
-                }
+                if (mounted) setState(() => _isLoading = false);
               }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: primaryColor,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               elevation: 4,
             ),
             child: _isLoading
                 ? const SizedBox(
                     height: 24,
                     width: 24,
-                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 3,
+                    ),
                   )
                 : Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Confirm & Proceed',
+                        _s.confirmAndProceed,
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -700,9 +694,12 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Text(
-            'By continuing, you agree to Nafaj\'s Terms of Service and Privacy Policy.',
+            _s.termsAgreement,
             textAlign: TextAlign.center,
-            style: GoogleFonts.plusJakartaSans(fontSize: 12, color: const Color(0xFF64748B)),
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 12,
+              color: const Color(0xFF64748B),
+            ),
           ),
         ),
       ],
@@ -783,16 +780,11 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
     required String id,
     required String label,
     required IconData icon,
-    required Color primaryColor,
   }) {
-    bool isSelected = _selectedVehicle == id;
+    final bool isSelected = _selectedVehicle == id;
 
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedVehicle = id;
-        });
-      },
+      onTap: () => setState(() => _selectedVehicle = id),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(12),
@@ -800,9 +792,7 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
           color: isSelected ? primaryColor.withOpacity(0.05) : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected
-                ? primaryColor
-                : const Color(0xFFF1F5F9), // slate-100
+            color: isSelected ? primaryColor : const Color(0xFFF1F5F9),
             width: 2,
           ),
         ),
@@ -810,9 +800,7 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
           children: [
             Icon(
               icon,
-              color: isSelected
-                  ? primaryColor
-                  : const Color(0xFF64748B), // slate-500
+              color: isSelected ? primaryColor : const Color(0xFF64748B),
               size: 24,
             ),
             const SizedBox(height: 4),
@@ -822,9 +810,7 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.5,
-                color: isSelected
-                    ? primaryColor
-                    : const Color(0xFF475569), // slate-600
+                color: isSelected ? primaryColor : const Color(0xFF475569),
               ),
             ),
           ],
@@ -833,4 +819,3 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
     );
   }
 }
-

@@ -28,15 +28,15 @@ class _NafajUserSignUpScreenState extends State<NafajUserSignUpScreen> {
       return;
     }
 
-    // Format phone number to Pakistani format
-    String phone = _phoneController.text.trim().replaceAll(RegExp(r'[^\d]'), '');
-    if (phone.startsWith('249')) {
-      phone = '0${phone.substring(3)}';
-    } else if (phone.startsWith('+249')) {
-      phone = '0${phone.substring(4)}';
-    } else if (!phone.startsWith('0')) {
-      phone = '0$phone';
+    final rawPhone = _phoneController.text.trim().replaceAll(RegExp(r'\D'), '');
+    if (rawPhone.length < 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('رقم الهاتف يجب أن يكون 10 أرقام على الأقل')),
+      );
+      return;
     }
+
+    String phone = _phoneController.text.trim();
 
     setState(() => _isLoading = true);
     
@@ -61,7 +61,7 @@ class _NafajUserSignUpScreenState extends State<NafajUserSignUpScreen> {
           SnackBar(content: Text(result['message'] ?? 'تم إنشاء الحساب بنجاح')),
         );
         // Navigate to home/dashboard
-        Navigator.pushReplacementNamed(context, '/nafaj_marketplace_home');
+        Navigator.pushReplacementNamed(context, '/nafaj_home_exact_header_match');
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(result['error'] ?? 'فشل إنشاء الحساب')),
@@ -160,7 +160,7 @@ class _NafajUserSignUpScreenState extends State<NafajUserSignUpScreen> {
                 _buildLabel('رقم الهاتف'),
                 _buildInput(
                   controller: _phoneController,
-                  hintText: '09xx xxx xxx',
+                  hintText: '+1234567890',
                   keyboardType: TextInputType.phone,
                   textDirection: TextDirection.ltr,
                 ),

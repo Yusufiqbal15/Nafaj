@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../providers/locale_provider.dart';
 import '../l10n/app_strings.dart';
+import '../theme/nafaj_theme.dart';
 
 class VendorLoginScreen extends StatefulWidget {
   const VendorLoginScreen({super.key});
@@ -125,7 +126,7 @@ class _VendorLoginScreenState extends State<VendorLoginScreen>
     return Directionality(
       textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: const Color(0xFF08091A),
+        backgroundColor: Nc.darkBg,
         body: Stack(
           children: [
             // Animated background
@@ -292,43 +293,20 @@ class _VendorLoginScreenState extends State<VendorLoginScreen>
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 44,
-        height: 44,
+        width: 44, height: 44,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.07),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withOpacity(0.12)),
+          color: Nc.darkCard,
+          borderRadius: BorderRadius.circular(Nr.sm),
+          border: Border.all(color: Nc.darkBorder),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 8, offset: const Offset(0,2))],
         ),
-        child: Icon(icon, color: Colors.white70, size: 20),
+        child: Icon(icon, color: Nc.textOnDarkMuted, size: 20),
       ),
     );
   }
 
-  Widget _roleBadge(String label, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.35)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: color, size: 14),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: GoogleFonts.notoSansArabic(
-              color: color,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _roleBadge(String label, IconData icon, Color color) =>
+      NafajRoleBadge(label: label, icon: icon, color: color);
 
   Widget _vendorIconHero() {
     return AnimatedBuilder(
@@ -441,52 +419,50 @@ class _VendorLoginScreenState extends State<VendorLoginScreen>
     );
   }
 
+  // Vendor accent: amber-gold (role differentiation from driver's orange)
+  static const Color _vendorAccent = Color(0xFFFFAA00);
+
   Widget _formCard() {
-    final s = AppStrings.direct(
-        isArabic: context.read<LocaleProvider>().isArabic);
+    final s = AppStrings.direct(isArabic: context.read<LocaleProvider>().isArabic);
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.045),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white.withOpacity(0.09)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFFFAA00).withOpacity(0.04),
-            blurRadius: 40,
-          ),
-        ],
+        color: Nc.darkSurface,
+        borderRadius: BorderRadius.circular(Nr.card),
+        border: Border.all(color: Nc.darkBorder),
+        boxShadow: Ns.darkCard,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _fieldLabel(s.emailLabel),
           const SizedBox(height: 10),
-          _darkTextField(
+          _vendorDarkField(
             controller: _emailController,
             hint: 'vendor@example.com',
             icon: Icons.alternate_email_rounded,
             ltr: true,
             keyboard: TextInputType.emailAddress,
-            accentColor: const Color(0xFFFFAA00),
           ),
           const SizedBox(height: 18),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _fieldLabel(s.passwordLabel),
-              Text(
-                s.forgotPassword,
+              Text(s.forgotPassword,
                 style: GoogleFonts.notoSansArabic(
-                  color: const Color(0xFFFFAA00),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+                    color: _vendorAccent, fontSize: 12, fontWeight: FontWeight.w600)),
             ],
           ),
           const SizedBox(height: 10),
-          _darkPassField(accentColor: const Color(0xFFFFAA00)),
+          _vendorDarkField(
+            controller: _passwordController,
+            hint: '••••••••',
+            icon: Icons.lock_rounded,
+            obscure: _obscurePassword,
+            showToggle: true,
+            onToggle: () => setState(() => _obscurePassword = !_obscurePassword),
+          ),
         ],
       ),
     );
@@ -495,144 +471,92 @@ class _VendorLoginScreenState extends State<VendorLoginScreen>
   Widget _fieldLabel(String text) => Text(
         text,
         style: GoogleFonts.notoSansArabic(
-          color: Colors.white60,
+          color: Nc.textOnDarkMuted,
           fontSize: 13,
           fontWeight: FontWeight.w500,
         ),
       );
 
-  Widget _darkTextField({
+  Widget _vendorDarkField({
     required TextEditingController controller,
     required String hint,
     required IconData icon,
     bool ltr = false,
     TextInputType? keyboard,
-    required Color accentColor,
+    bool obscure = false,
+    bool showToggle = false,
+    VoidCallback? onToggle,
   }) {
     return Container(
-      height: 52,
+      height: 54,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.055),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        color: Nc.darkCard,
+        borderRadius: BorderRadius.circular(Nr.input),
+        border: Border.all(color: Nc.darkBorder),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.25), blurRadius: 8, offset: const Offset(0,2))],
       ),
       child: TextField(
         controller: controller,
+        obscureText: obscure,
         textDirection: ltr ? TextDirection.ltr : null,
         textAlign: ltr ? TextAlign.left : TextAlign.right,
         keyboardType: keyboard,
-        cursorColor: Colors.white,
-        style: GoogleFonts.plusJakartaSans(color: Colors.black, fontSize: 15),
+        cursorColor: _vendorAccent,
+        style: GoogleFonts.plusJakartaSans(color: Nc.textOnDark, fontSize: 15),
         decoration: InputDecoration(
           border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
           hintText: hint,
-          hintStyle:
-              GoogleFonts.plusJakartaSans(color: Colors.white24, fontSize: 14),
-          prefixIcon: Icon(icon, color: accentColor.withOpacity(0.65), size: 19),
-        ),
-      ),
-    );
-  }
-
-  Widget _darkPassField({required Color accentColor}) {
-    return Container(
-      height: 52,
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.055),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
-      ),
-      child: TextField(
-        controller: _passwordController,
-        obscureText: _obscurePassword,
-        cursorColor: Colors.white,
-        style: GoogleFonts.plusJakartaSans(color: Colors.black, fontSize: 15),
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          hintText: '••••••••',
-          hintStyle: GoogleFonts.plusJakartaSans(
-            color: Colors.white24,
-            fontSize: 20,
-            letterSpacing: 2,
-          ),
-          prefixIcon: Icon(Icons.lock_rounded,
-              color: accentColor.withOpacity(0.65), size: 19),
-          suffixIcon: IconButton(
-            icon: Icon(
-              _obscurePassword
-                  ? Icons.visibility_rounded
-                  : Icons.visibility_off_rounded,
-              color: Colors.white38,
-              size: 19,
-            ),
-            onPressed: () =>
-                setState(() => _obscurePassword = !_obscurePassword),
-          ),
+          hintStyle: GoogleFonts.plusJakartaSans(color: Nc.textOnDarkFaint, fontSize: 14),
+          prefixIcon: Icon(icon, color: _vendorAccent.withOpacity(0.65), size: 19),
+          suffixIcon: showToggle
+              ? IconButton(
+                  icon: Icon(
+                    obscure ? Icons.visibility_rounded : Icons.visibility_off_rounded,
+                    color: Nc.textOnDarkMuted, size: 19),
+                  onPressed: onToggle)
+              : null,
         ),
       ),
     );
   }
 
   Widget _loginButton() {
-    final s = AppStrings.direct(
-        isArabic: context.read<LocaleProvider>().isArabic);
+    final s = AppStrings.direct(isArabic: context.read<LocaleProvider>().isArabic);
     return GestureDetector(
       onTapDown: (_) => _btnPressCtrl.forward(),
-      onTapUp: (_) {
-        _btnPressCtrl.reverse();
-        if (!_isLoading) _login();
-      },
+      onTapUp: (_) { _btnPressCtrl.reverse(); if (!_isLoading) _login(); },
       onTapCancel: () => _btnPressCtrl.reverse(),
       child: AnimatedBuilder(
         animation: _btnPressCtrl,
-        builder: (_, child) => Transform.scale(
-          scale: 1.0 - _btnPressCtrl.value * 0.03,
-          child: child,
-        ),
+        builder: (_, child) => Transform.scale(scale: 1.0 - _btnPressCtrl.value * 0.03, child: child),
         child: Container(
           width: double.infinity,
           height: 56,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFFFFAA00), Color(0xFFCC7700)],
-              begin: Alignment.centerRight,
-              end: Alignment.centerLeft,
+              colors: [Color(0xFFFFAA00), Color(0xFFB87A00)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(Nr.btn),
             boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFCC8800).withOpacity(0.5),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
-              ),
+              BoxShadow(color: const Color(0xFFCC8800).withOpacity(0.42), blurRadius: 22, offset: const Offset(0, 8)),
+              BoxShadow(color: const Color(0xFFCC8800).withOpacity(0.12), blurRadius: 6, offset: const Offset(0, 2)),
             ],
           ),
           child: Center(
             child: _isLoading
-                ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(
-                        color: Colors.white, strokeWidth: 2.5),
-                  )
+                ? const SizedBox(width: 22, height: 22,
+                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
                 : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.storefront_rounded,
-                          color: Colors.white, size: 20),
+                      const Icon(Icons.storefront_rounded, color: Colors.white, size: 20),
                       const SizedBox(width: 10),
-                      Text(
-                        s.loginAsVendor,
-                        style: GoogleFonts.notoSansArabic(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
+                      Text(s.loginAsVendor,
+                          style: GoogleFonts.notoSansArabic(
+                              fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 0.3)),
                     ],
                   ),
           ),
@@ -642,45 +566,30 @@ class _VendorLoginScreenState extends State<VendorLoginScreen>
   }
 
   Widget _footer() {
-    final s = AppStrings.direct(
-        isArabic: context.read<LocaleProvider>().isArabic);
+    final s = AppStrings.direct(isArabic: context.read<LocaleProvider>().isArabic);
     return Column(
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              s.noVendorAccount,
-              style: GoogleFonts.notoSansArabic(
-                  color: Colors.white38, fontSize: 14),
-            ),
+            Text(s.noVendorAccount,
+                style: GoogleFonts.notoSansArabic(color: Nc.textOnDarkFaint, fontSize: 14)),
             GestureDetector(
               onTap: () => Navigator.pushNamed(context, '/vendor_sign_up'),
-              child: Text(
-                s.createVendorAccount,
-                style: GoogleFonts.notoSansArabic(
-                  color: const Color(0xFFFFAA00),
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              child: Text(s.createVendorAccount,
+                  style: GoogleFonts.notoSansArabic(
+                      color: _vendorAccent, fontSize: 14, fontWeight: FontWeight.bold)),
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.verified_rounded,
-                size: 13, color: Colors.white.withOpacity(0.25)),
-            const SizedBox(width: 6),
-            Text(
-              s.vendorPlatform,
-              style: GoogleFonts.notoSansArabic(
-                fontSize: 11,
-                color: Colors.white.withOpacity(0.25),
-              ),
-            ),
+            Icon(Icons.shield_rounded, size: 12, color: Nc.textOnDarkFaint),
+            const SizedBox(width: 5),
+            Text(s.vendorPlatform,
+                style: GoogleFonts.notoSansArabic(fontSize: 11, color: Nc.textOnDarkFaint)),
           ],
         ),
       ],
@@ -694,14 +603,14 @@ class _VendorBgPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Deep dark base
+    // Warm-dark base (vendor: slightly warmer amber undertone vs driver's pure dark)
     canvas.drawRect(
       Rect.fromLTWH(0, 0, size.width, size.height),
       Paint()
         ..shader = const LinearGradient(
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
-          colors: [Color(0xFF08091A), Color(0xFF100C20)],
+          colors: [Color(0xFF0C0903), Color(0xFF090604)],
         ).createShader(Rect.fromLTWH(0, 0, size.width, size.height)),
     );
 
@@ -709,37 +618,28 @@ class _VendorBgPainter extends CustomPainter {
     final ax = size.width * (0.12 + 0.06 * math.cos(t * math.pi));
     final ay = size.height * (0.12 + 0.04 * math.sin(t * math.pi));
     canvas.drawCircle(
-      Offset(ax, ay),
-      size.width * 0.5,
-      Paint()
-        ..shader = RadialGradient(colors: [
-          const Color(0xFFCC8800).withOpacity(0.16),
-          Colors.transparent,
-        ]).createShader(Rect.fromCircle(
-            center: Offset(ax, ay), radius: size.width * 0.5)),
+      Offset(ax, ay), size.width * 0.5,
+      Paint()..shader = RadialGradient(colors: [
+        const Color(0xFFCC8800).withOpacity(0.20), Colors.transparent,
+      ]).createShader(Rect.fromCircle(center: Offset(ax, ay), radius: size.width * 0.5)),
     );
 
-    // Purple orb – bottom right
+    // Deep amber orb – bottom right
     final px = size.width * (0.9 + 0.05 * math.sin(t * math.pi));
     final py = size.height * (0.78 + 0.05 * math.cos(t * math.pi));
     canvas.drawCircle(
-      Offset(px, py),
-      size.width * 0.55,
-      Paint()
-        ..shader = RadialGradient(colors: [
-          const Color(0xFF4A1A80).withOpacity(0.18),
-          Colors.transparent,
-        ]).createShader(Rect.fromCircle(
-            center: Offset(px, py), radius: size.width * 0.55)),
+      Offset(px, py), size.width * 0.55,
+      Paint()..shader = RadialGradient(colors: [
+        const Color(0xFF7A3A00).withOpacity(0.18), Colors.transparent,
+      ]).createShader(Rect.fromCircle(center: Offset(px, py), radius: size.width * 0.55)),
     );
 
-    // Subtle grid
+    // Subtle warm grid
     final grid = Paint()
-      ..color = Colors.white.withOpacity(0.02)
+      ..color = const Color(0xFFFFAA00).withOpacity(0.022)
       ..strokeWidth = 0.5;
     for (int i = 0; i <= 10; i++) {
-      final x = size.width * i / 10;
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), grid);
+      canvas.drawLine(Offset(size.width * i / 10, 0), Offset(size.width * i / 10, size.height), grid);
     }
     for (int i = 0; i <= 20; i++) {
       final y = size.height * i / 20;

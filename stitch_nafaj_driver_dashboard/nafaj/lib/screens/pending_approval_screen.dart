@@ -2,7 +2,10 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../services/api_service.dart';
+import '../providers/locale_provider.dart';
+import '../l10n/app_strings.dart';
 
 class PendingApprovalScreen extends StatefulWidget {
   final String userType; // 'vendor' or 'driver'
@@ -20,7 +23,7 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen>
   late final AnimationController _bgCtrl;
 
   bool _isChecking = false;
-  String _statusMessage = 'Your account is under review';
+  bool _isRejected = false;
   Timer? _autoCheckTimer;
 
   static const Color primaryColor = Color(0xFFCC5500);
@@ -80,18 +83,24 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen>
         }
 
         if (status == 'rejected') {
-          setState(() {
-            _statusMessage = 'Your account has been rejected.\nPlease contact nafaj support.';
-          });
-          if (!silent) _showSnack('Account rejected. Contact support for assistance.');
+          setState(() { _isRejected = true; });
+          final s = AppStrings.direct(isArabic: context.read<LocaleProvider>().isArabic);
+          if (!silent) _showSnack(s.accountRejectedSnack);
         } else {
-          if (!silent) _showSnack('Still pending. We\'ll notify you once approved.');
+          if (!silent) {
+            final s = AppStrings.direct(isArabic: context.read<LocaleProvider>().isArabic);
+            _showSnack(s.stillPendingSnack);
+          }
         }
       } else {
-        if (!silent) _showSnack(result['error'] ?? 'Could not check status');
+        final s = AppStrings.direct(isArabic: context.read<LocaleProvider>().isArabic);
+        if (!silent) _showSnack(result['error'] ?? s.couldNotCheckStatus);
       }
     } catch (_) {
-      if (!silent && mounted) _showSnack('Network error. Please try again.');
+      if (!silent && mounted) {
+        final s = AppStrings.direct(isArabic: context.read<LocaleProvider>().isArabic);
+        _showSnack(s.networkError);
+      }
     } finally {
       if (mounted) setState(() => _isChecking = false);
     }
@@ -117,11 +126,16 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen>
 
   @override
   Widget build(BuildContext context) {
+    final s = AppStrings.direct(isArabic: context.watch<LocaleProvider>().isArabic);
+    final isAr = context.watch<LocaleProvider>().isArabic;
     final size = MediaQuery.of(context).size;
     final isVendor = widget.userType == 'vendor';
     final accentColor = isVendor ? const Color(0xFFFFAA00) : primaryColor;
+    final statusMessage = _isRejected ? s.accountRejectedStatus : s.accountUnderReview;
 
-    return Scaffold(
+    return Directionality(
+      textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
       backgroundColor: const Color(0xFF06080F),
       body: Stack(
         children: [
@@ -143,7 +157,7 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildRoleBadge(isVendor, accentColor),
+                      _buildRoleBadge(isVendor, accentColor, s),
                       GestureDetector(
                         onTap: _logout,
                         child: Container(
@@ -156,7 +170,7 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen>
                                 color: Colors.white.withOpacity(0.1)),
                           ),
                           child: Text(
-                            'Log out',
+                            s.logOutAction,
                             style: GoogleFonts.plusJakartaSans(
                               color: Colors.white54,
                               fontSize: 13,
@@ -185,7 +199,7 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen>
 
                           // Title
                           Text(
-                            'Pending Approval',
+                            s.pendingApproval,
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 28,
                               fontWeight: FontWeight.w800,
@@ -196,7 +210,7 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen>
                           const SizedBox(height: 12),
 
                           Text(
-                            _statusMessage,
+                            statusMessage,
                             textAlign: TextAlign.center,
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 15,
@@ -208,17 +222,17 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen>
                           const SizedBox(height: 36),
 
                           // Info card
-                          _buildInfoCard(accentColor),
+                          _buildInfoCard(accentColor, s),
 
                           const SizedBox(height: 32),
 
                           // Check status button
-                          _buildCheckButton(accentColor),
+                          _buildCheckButton(accentColor, s),
 
                           const SizedBox(height: 20),
 
                           // Status steps
-                          _buildStatusSteps(accentColor),
+                          _buildStatusSteps(accentColor, s),
 
                           const SizedBox(height: 40),
                         ],
@@ -231,10 +245,11 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen>
           ),
         ],
       ),
-    );
+    ), // Scaffold
+    ); // Directionality
   }
 
-  Widget _buildRoleBadge(bool isVendor, Color accentColor) {
+  Widget _buildRoleBadge(bool isVendor, Color accentColor, AppStrings s) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
@@ -252,7 +267,7 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen>
           ),
           const SizedBox(width: 6),
           Text(
-            isVendor ? 'Vendor Portal' : 'Driver Portal',
+            isVendor ? s.vendorPortal : s.driverPortal,
             style: GoogleFonts.plusJakartaSans(
               color: accentColor,
               fontSize: 12,
@@ -339,7 +354,7 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen>
     );
   }
 
-  Widget _buildInfoCard(Color accentColor) {
+  Widget _buildInfoCard(Color accentColor, AppStrings s) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -351,22 +366,22 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen>
         children: [
           _infoRow(
             Icons.check_circle_outline_rounded,
-            'Registration submitted',
-            'Your details have been saved',
+            s.registrationSubmitted,
+            s.yourDetailsSaved,
             const Color(0xFF22C55E),
           ),
           const SizedBox(height: 16),
           _infoRow(
             Icons.manage_accounts_rounded,
-            'Admin review in progress',
-            'Nafaj team is verifying your information',
+            s.adminReviewInProgress,
+            s.nafajTeamVerifying,
             accentColor,
           ),
           const SizedBox(height: 16),
           _infoRow(
             Icons.rocket_launch_rounded,
-            'Access granted after approval',
-            'You\'ll be redirected automatically',
+            s.accessGrantedAfterApproval,
+            s.youllBeRedirected,
             Colors.white38,
           ),
         ],
@@ -415,7 +430,7 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen>
     );
   }
 
-  Widget _buildCheckButton(Color accentColor) {
+  Widget _buildCheckButton(Color accentColor, AppStrings s) {
     return GestureDetector(
       onTap: _isChecking ? null : () => _checkStatus(),
       child: Container(
@@ -451,7 +466,7 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen>
                         color: Colors.white, size: 20),
                     const SizedBox(width: 10),
                     Text(
-                      'Check Approval Status',
+                      s.checkApprovalStatus,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
@@ -465,7 +480,7 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen>
     );
   }
 
-  Widget _buildStatusSteps(Color accentColor) {
+  Widget _buildStatusSteps(Color accentColor, AppStrings s) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -479,7 +494,7 @@ class _PendingApprovalScreenState extends State<PendingApprovalScreen>
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Status is checked automatically every 30 seconds. Tap the button above to check immediately.',
+              s.autoCheckInfo,
               style: GoogleFonts.plusJakartaSans(
                 color: Colors.white38,
                 fontSize: 12,

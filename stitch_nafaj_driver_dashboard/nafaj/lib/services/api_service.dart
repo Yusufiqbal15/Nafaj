@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:typed_data';
@@ -22,12 +24,53 @@ class ApiService {
   // Public getter for dio instance
   static Dio get dio => _dio;
 
-  // Initialize interceptors
+  // ── Central error handler ──────────────────────────────────────────────────
+  static String _errorMessage(DioException e) {
+    // Server returned a response with error body
+    if (e.response != null) {
+      final data = e.response!.data;
+      if (data is Map && data['error'] != null) return data['error'].toString();
+      if (e.response!.statusCode == 401) return 'Invalid email or password.';
+      if (e.response!.statusCode == 403) return 'Access denied.';
+      if (e.response!.statusCode == 404) return 'Not found.';
+      if (e.response!.statusCode == 500) return 'Server error. Please try again.';
+      return 'Server error (${e.response!.statusCode}). Please try again.';
+    }
+    // Timeout
+    if (e.type == DioExceptionType.connectionTimeout ||
+        e.type == DioExceptionType.sendTimeout ||
+        e.type == DioExceptionType.receiveTimeout) {
+      return 'Request timed out. Please try again.';
+    }
+    // Connection / SSL / DNS errors
+    final msg = e.message?.toLowerCase() ?? '';
+    if (msg.contains('certificate') || msg.contains('ssl') || msg.contains('handshake')) {
+      return 'SSL error connecting to server. Please try again.';
+    }
+    if (msg.contains('lookup') || msg.contains('resolve')) {
+      return 'Cannot reach server. Check your internet connection.';
+    }
+    return 'Connection failed. Please check your internet and try again.';
+  }
+
+  // Initialize interceptors + SSL fix
   static void initialize() {
+    // Fix SSL/certificate issues on Android (especially older devices & some ISPs)
+    if (!kIsWeb) {
+      (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
+        final client = HttpClient();
+        // Allow Railway's *.railway.app certificates even on older Android versions
+        client.badCertificateCallback =
+            (X509Certificate cert, String host, int port) {
+          return host.endsWith('.railway.app');
+        };
+        return client;
+      };
+    }
+
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          // Add token to headers if available
           final token = await _storage.read(key: ApiConfig.tokenKey);
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
@@ -36,7 +79,6 @@ class ApiService {
         },
         onError: (error, handler) async {
           if (error.response?.statusCode == 401) {
-            // Token expired or invalid - clear storage
             await clearAuthData();
           }
           return handler.next(error);
@@ -134,7 +176,7 @@ class ApiService {
       }
       return {
         'success': false,
-        'error': 'Network error: ${e.message}'
+        'error': _errorMessage(e)
       };
     } catch (e) {
       return {
@@ -177,7 +219,7 @@ class ApiService {
       }
       return {
         'success': false,
-        'error': 'Network error: ${e.message}'
+        'error': _errorMessage(e)
       };
     } catch (e) {
       return {
@@ -234,7 +276,7 @@ class ApiService {
       }
       return {
         'success': false,
-        'error': 'Network error: ${e.message}'
+        'error': _errorMessage(e)
       };
     } catch (e) {
       return {
@@ -282,7 +324,7 @@ class ApiService {
       }
       return {
         'success': false,
-        'error': 'Network error: ${e.message}'
+        'error': _errorMessage(e)
       };
     } catch (e) {
       return {
@@ -343,7 +385,7 @@ class ApiService {
       }
       return {
         'success': false,
-        'error': 'Network error: ${e.message}'
+        'error': _errorMessage(e)
       };
     } catch (e) {
       return {
@@ -391,7 +433,7 @@ class ApiService {
       }
       return {
         'success': false,
-        'error': 'Network error: ${e.message}'
+        'error': _errorMessage(e)
       };
     } catch (e) {
       return {

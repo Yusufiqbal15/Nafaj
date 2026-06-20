@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../services/order_service.dart';
 import '../widgets/nafaj_bottom_nav.dart';
+import '../providers/locale_provider.dart';
+import '../l10n/app_strings.dart';
 
 class UserOrdersScreen extends StatefulWidget {
   const UserOrdersScreen({super.key});
@@ -67,16 +70,19 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
 
   Future<void> _confirmDelivery(int orderId) async {
     // Show confirmation dialog
+    final dlgS = AppStrings.direct(
+      isArabic: Provider.of<LocaleProvider>(context, listen: false).isArabic,
+    );
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            Icon(Icons.check_circle, color: const Color(0xFF10B981), size: 28),
+            const Icon(Icons.check_circle, color: Color(0xFF10B981), size: 28),
             const SizedBox(width: 12),
             Text(
-              'Confirm Delivery',
+              dlgS.confirmDeliveryDialogTitle,
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -85,14 +91,14 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
           ],
         ),
         content: Text(
-          'Have you received your order successfully? This will mark the order as delivered.',
+          dlgS.confirmDeliveryDialogMsg,
           style: GoogleFonts.inter(fontSize: 14),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
-              'Cancel',
+              dlgS.cancel,
               style: GoogleFonts.inter(
                 fontWeight: FontWeight.bold,
                 color: Colors.grey,
@@ -108,7 +114,7 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
               ),
             ),
             child: Text(
-              'Yes, Confirm',
+              dlgS.yesConfirmBtn,
               style: GoogleFonts.inter(fontWeight: FontWeight.bold),
             ),
           ),
@@ -137,7 +143,7 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Confirming delivery...',
+                dlgS.confirmingDeliveryMsg,
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -161,7 +167,7 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                '✅ Delivery confirmed successfully!',
+                dlgS.deliveryConfirmedSuccess,
                 style: GoogleFonts.inter(color: Colors.white),
               ),
               backgroundColor: const Color(0xFF10B981),
@@ -225,8 +231,12 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
     const Color bgColor = Color(0xFFFFFBF7);
     const Color darkSlate = Color(0xFF0F172A);
     const Color textGrey = Color(0xFF64748B);
+    final locale = Provider.of<LocaleProvider>(context);
+    final s = AppStrings.direct(isArabic: locale.isArabic);
 
-    return Scaffold(
+    return Directionality(
+      textDirection: locale.isArabic ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
       backgroundColor: bgColor,
       body: SafeArea(
         child: Column(
@@ -251,8 +261,10 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
                           ),
                         ],
                       ),
-                      child: const Icon(
-                        Icons.arrow_back_rounded,
+                      child: Icon(
+                        locale.isArabic
+                            ? Icons.arrow_forward_rounded
+                            : Icons.arrow_back_rounded,
                         color: darkSlate,
                         size: 20,
                       ),
@@ -264,7 +276,7 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'My Orders',
+                          s.myOrders,
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 24,
                             fontWeight: FontWeight.w900,
@@ -272,7 +284,7 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
                           ),
                         ),
                         Text(
-                          '${_orders.length} orders',
+                          s.ordersTotal(_orders.length),
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             color: textGrey,
@@ -290,11 +302,11 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
-                  _buildFilterChip('All', 'all', primaryColor),
+                  _buildFilterChip(s.filterAll, 'all', primaryColor),
                   const SizedBox(width: 8),
-                  _buildFilterChip('Pending', 'pending', primaryColor),
+                  _buildFilterChip(s.filterPending, 'pending', primaryColor),
                   const SizedBox(width: 8),
-                  _buildFilterChip('Delivered', 'delivered', primaryColor),
+                  _buildFilterChip(s.filterDelivered, 'delivered', primaryColor),
                 ],
               ),
             ),
@@ -334,7 +346,7 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
                                   ),
                                 ),
                                 child: Text(
-                                  'Retry',
+                                  s.retryBtn,
                                   style: GoogleFonts.plusJakartaSans(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
@@ -356,7 +368,7 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
                                   ),
                                   const SizedBox(height: 16),
                                   Text(
-                                    'No orders yet',
+                                    s.noOrdersYet,
                                     style: GoogleFonts.plusJakartaSans(
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
@@ -365,7 +377,7 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
-                                    'Your orders will appear here',
+                                    s.ordersWillAppearHere,
                                     style: GoogleFonts.inter(
                                       fontSize: 14,
                                       color: textGrey,
@@ -397,10 +409,9 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
         ),
       ),
       bottomNavigationBar: NafajBottomNav(
-        currentIndex: 1, // Orders tab
-        onTap: (index) {
-          // Handle navigation
-        },
+        currentIndex: 1,
+        onTap: (index) {},
+      ),
       ),
     );
   }
@@ -489,55 +500,58 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
     String statusText;
     IconData statusIcon;
 
+    final orderS = AppStrings.direct(
+      isArabic: Provider.of<LocaleProvider>(context, listen: false).isArabic,
+    );
     switch (orderStatus) {
       case 'pending':
         statusColor = Colors.orange;
-        statusText = 'Pending';
+        statusText = orderS.statusPending;
         statusIcon = Icons.schedule_rounded;
         break;
       case 'confirmed':
         statusColor = Colors.blue;
-        statusText = 'Confirmed';
+        statusText = orderS.statusConfirmedLabel;
         statusIcon = Icons.check_circle_outline;
         break;
       case 'preparing':
         statusColor = Colors.purple;
-        statusText = 'Preparing';
+        statusText = orderS.statusPreparingLabel;
         statusIcon = Icons.restaurant_rounded;
         break;
       case 'ready':
         statusColor = Colors.teal;
-        statusText = 'Ready';
+        statusText = orderS.statusReadyLabel;
         statusIcon = Icons.shopping_bag_rounded;
         break;
       case 'picked_up':
         statusColor = const Color(0xFF10B981);
-        statusText = 'Picked Up';
+        statusText = orderS.statusPickedUpLabel;
         statusIcon = Icons.local_shipping_rounded;
         break;
       case 'out_for_delivery':
         statusColor = const Color(0xFF10B981);
-        statusText = 'Out for Delivery';
+        statusText = orderS.statusOutForDeliveryLabel;
         statusIcon = Icons.delivery_dining_rounded;
         break;
       case 'delivering':
         statusColor = const Color(0xFF10B981);
-        statusText = 'Arriving Soon';
+        statusText = orderS.statusArrivingSoonLabel;
         statusIcon = Icons.delivery_dining_rounded;
         break;
       case 'pending_confirmation':
         statusColor = const Color(0xFF8B5CF6);
-        statusText = 'Confirm Receipt';
+        statusText = orderS.statusConfirmReceiptLabel;
         statusIcon = Icons.assignment_turned_in_rounded;
         break;
       case 'delivered':
         statusColor = const Color(0xFF10B981);
-        statusText = 'Delivered';
+        statusText = orderS.statusDeliveredLabel;
         statusIcon = Icons.check_circle_rounded;
         break;
       case 'cancelled':
         statusColor = Colors.red;
-        statusText = 'Cancelled';
+        statusText = orderS.statusCancelled;
         statusIcon = Icons.cancel_rounded;
         break;
       default:
@@ -684,7 +698,7 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
           // Order Items
           if (items.isNotEmpty) ...[
             Text(
-              'Items (${items.length})',
+              orderS.itemsListCount(items.length),
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 13,
                 fontWeight: FontWeight.bold,
@@ -835,7 +849,7 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
-                  '+${items.length - 3} more items',
+                  orderS.moreItemsLabel(items.length - 3),
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     color: primaryColor,
@@ -859,7 +873,7 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Total Amount',
+                orderS.totalAmountLabel,
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -896,7 +910,7 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                   child: Text(
-                    'View Details',
+                    orderS.viewDetailsBtn,
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -921,7 +935,7 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     child: Text(
-                      '✓ Confirm Delivery',
+                      orderS.confirmDeliveryBtn,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -957,7 +971,7 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     child: Text(
-                      'Track Order',
+                      orderS.trackOrderBtn,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -980,6 +994,9 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
       isScrollControlled: true,
       builder: (context) {
         final items = order['items'] ?? [];
+        final sheetS = AppStrings.direct(
+          isArabic: Provider.of<LocaleProvider>(context, listen: false).isArabic,
+        );
         return Container(
           height: MediaQuery.of(context).size.height * 0.75,
           decoration: const BoxDecoration(
@@ -1001,7 +1018,7 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: Text(
-                  'Order Details',
+                  sheetS.orderDetailsTitle,
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 20,
                     fontWeight: FontWeight.w900,
@@ -1012,16 +1029,16 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
                 child: ListView(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   children: [
-                    _buildDetailRow('Order Number', order['order_number']),
-                    _buildDetailRow('Status', order['order_status']),
-                    _buildDetailRow('Vendor', order['vendor_name']),
-                    _buildDetailRow('Vendor Email', order['vendor_email']),
-                    _buildDetailRow('Delivery Address', order['delivery_address']),
-                    _buildDetailRow('Payment Method', order['payment_method']),
-                    _buildDetailRow('Total Amount', 'SDG ${order['final_amount']}'),
+                    _buildDetailRow(sheetS.orderNumberLabel, order['order_number']),
+                    _buildDetailRow(sheetS.filterAll, order['order_status']),
+                    _buildDetailRow(sheetS.vendorNameLabel, order['vendor_name']),
+                    _buildDetailRow(sheetS.vendorEmailLabel, order['vendor_email']),
+                    _buildDetailRow(sheetS.deliveryAddressLabel, order['delivery_address']),
+                    _buildDetailRow(sheetS.paymentMethodLabel, order['payment_method']),
+                    _buildDetailRow(sheetS.totalAmountLabel, 'SDG ${order['final_amount']}'),
                     const SizedBox(height: 16),
                     Text(
-                      'Order Items',
+                      sheetS.orderItemsLabel,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../services/order_service.dart';
+import '../providers/locale_provider.dart';
+import '../l10n/app_strings.dart';
 
 class DriverWalletScreen extends StatefulWidget {
   const DriverWalletScreen({super.key});
@@ -15,6 +18,9 @@ class _DriverWalletScreenState extends State<DriverWalletScreen> {
   List<Map<String, dynamic>> _transactions = [];
   List<Map<String, dynamic>> _deliveredOrders = [];
   int _activeTab = 0; // 0 = Transactions, 1 = Deliveries
+
+  AppStrings _s = AppStrings.direct(isArabic: false);
+  bool _isAr = false;
 
   @override
   void initState() {
@@ -71,8 +77,8 @@ class _DriverWalletScreenState extends State<DriverWalletScreen> {
       final today = DateTime(now.year, now.month, now.day);
       final d = DateTime(dt.year, dt.month, dt.day);
       final timeStr = '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-      if (d == today) return 'Today, $timeStr';
-      if (d == today.subtract(const Duration(days: 1))) return 'Yesterday, $timeStr';
+      if (d == today) return '${_s.todayPrefix}$timeStr';
+      if (d == today.subtract(const Duration(days: 1))) return '${_s.yesterdayPrefix}$timeStr';
       return '${dt.day}/${dt.month}, $timeStr';
     } catch (_) {
       return raw ?? '';
@@ -81,12 +87,18 @@ class _DriverWalletScreenState extends State<DriverWalletScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final localeProvider = context.watch<LocaleProvider>();
+    _s = AppStrings.direct(isArabic: localeProvider.isArabic);
+    _isAr = localeProvider.isArabic;
+
     const Color primaryColor = Color(0xFFCC5500);
     const Color bgColor = Color(0xFFFFFBF7);
     const Color darkSlate = Color(0xFF0F172A);
     const Color textGrey = Color(0xFF475569);
 
-    return Scaffold(
+    return Directionality(
+      textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
       backgroundColor: bgColor,
       body: SafeArea(
         child: _isLoading
@@ -123,7 +135,7 @@ class _DriverWalletScreenState extends State<DriverWalletScreen> {
                             ),
                             const SizedBox(width: 16),
                             Expanded(
-                              child: Text('My Wallet',
+                              child: Text(_s.myWallet,
                                   style: GoogleFonts.plusJakartaSans(
                                       fontSize: 22, fontWeight: FontWeight.bold, color: darkSlate)),
                             ),
@@ -171,7 +183,7 @@ class _DriverWalletScreenState extends State<DriverWalletScreen> {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text('Available Balance',
+                                  Text(_s.availableBalance,
                                       style: GoogleFonts.inter(
                                           fontSize: 14, fontWeight: FontWeight.w500,
                                           color: Colors.white.withOpacity(0.8))),
@@ -215,7 +227,7 @@ class _DriverWalletScreenState extends State<DriverWalletScreen> {
                                         borderRadius: BorderRadius.circular(14),
                                       ),
                                       child: Center(
-                                        child: Text('Withdraw',
+                                        child: Text(_s.withdraw,
                                             style: GoogleFonts.inter(
                                                 fontSize: 14, fontWeight: FontWeight.bold, color: primaryColor)),
                                       ),
@@ -231,7 +243,7 @@ class _DriverWalletScreenState extends State<DriverWalletScreen> {
                                         border: Border.all(color: Colors.white.withOpacity(0.3)),
                                       ),
                                       child: Center(
-                                        child: Text('History',
+                                        child: Text(_s.history,
                                             style: GoogleFonts.inter(
                                                 fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
                                       ),
@@ -253,11 +265,11 @@ class _DriverWalletScreenState extends State<DriverWalletScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: Row(
                           children: [
-                            _buildStatCard('500 SDG', 'Per Delivery', Icons.local_shipping_rounded, primaryColor, darkSlate, textGrey),
+                            _buildStatCard('500 SDG', _s.perDelivery, Icons.local_shipping_rounded, primaryColor, darkSlate, textGrey),
                             const SizedBox(width: 12),
-                            _buildStatCard('$_totalDeliveries', 'Total Done', Icons.check_circle_rounded, const Color(0xFF10B981), darkSlate, textGrey),
+                            _buildStatCard('$_totalDeliveries', _s.totalDone, Icons.check_circle_rounded, const Color(0xFF10B981), darkSlate, textGrey),
                             const SizedBox(width: 12),
-                            _buildStatCard('$_weekDeliveries', 'This Week', Icons.calendar_today_rounded, const Color(0xFF3B82F6), darkSlate, textGrey),
+                            _buildStatCard('$_weekDeliveries', _s.thisWeek, Icons.calendar_today_rounded, const Color(0xFF3B82F6), darkSlate, textGrey),
                           ],
                         ),
                       ),
@@ -285,17 +297,17 @@ class _DriverWalletScreenState extends State<DriverWalletScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text("This Week's Earnings",
+                              Text(_s.thisWeekEarnings,
                                   style: GoogleFonts.plusJakartaSans(
                                       fontSize: 16, fontWeight: FontWeight.bold, color: darkSlate)),
                               const SizedBox(height: 16),
                               Row(
                                 children: [
-                                  _buildEarningsItem('Deliveries', _formatSDG(_weekEarnings), primaryColor, darkSlate, textGrey),
+                                  _buildEarningsItem(_s.deliveries, _formatSDG(_weekEarnings), primaryColor, darkSlate, textGrey),
                                   const SizedBox(width: 16),
-                                  _buildEarningsItem('Total All-Time', _formatSDG(_totalEarnings), const Color(0xFF8B5CF6), darkSlate, textGrey),
+                                  _buildEarningsItem(_s.totalAllTime, _formatSDG(_totalEarnings), const Color(0xFF8B5CF6), darkSlate, textGrey),
                                   const SizedBox(width: 16),
-                                  _buildEarningsItem('Per Order', '500', const Color(0xFFF59E0B), darkSlate, textGrey),
+                                  _buildEarningsItem(_s.perOrder, '500', const Color(0xFFF59E0B), darkSlate, textGrey),
                                 ],
                               ),
                               const SizedBox(height: 16),
@@ -307,9 +319,9 @@ class _DriverWalletScreenState extends State<DriverWalletScreen> {
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text('Week Deliveries',
+                                      Text(_s.weekDeliveries,
                                           style: GoogleFonts.inter(fontSize: 12, color: textGrey)),
-                                      Text('$_weekDeliveries × 500 SDG',
+                                      Text(_s.weekDeliveriesCalc(_weekDeliveries),
                                           style: GoogleFonts.inter(
                                               fontSize: 14, fontWeight: FontWeight.bold, color: darkSlate)),
                                     ],
@@ -317,7 +329,7 @@ class _DriverWalletScreenState extends State<DriverWalletScreen> {
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
-                                      Text('Week Earnings',
+                                      Text(_s.weekEarnings,
                                           style: GoogleFonts.inter(fontSize: 12, color: textGrey)),
                                       Text('${_formatSDG(_weekEarnings)} SDG',
                                           style: GoogleFonts.inter(
@@ -347,8 +359,8 @@ class _DriverWalletScreenState extends State<DriverWalletScreen> {
                           ),
                           child: Row(
                             children: [
-                              _buildTab(0, 'Earnings (${_transactions.length})', primaryColor, darkSlate),
-                              _buildTab(1, 'Deliveries (${_deliveredOrders.length})', primaryColor, darkSlate),
+                              _buildTab(0, _s.earningsTabLabel(_transactions.length), primaryColor, darkSlate),
+                              _buildTab(1, _s.deliveriesTabLabel(_deliveredOrders.length), primaryColor, darkSlate),
                             ],
                           ),
                         ),
@@ -369,11 +381,11 @@ class _DriverWalletScreenState extends State<DriverWalletScreen> {
                                       Icon(Icons.account_balance_wallet_outlined,
                                           size: 48, color: textGrey.withOpacity(0.4)),
                                       const SizedBox(height: 12),
-                                      Text('No transactions yet',
+                                      Text(_s.noTransactionsYet,
                                           style: GoogleFonts.plusJakartaSans(
                                               fontSize: 16, fontWeight: FontWeight.w600, color: darkSlate)),
                                       const SizedBox(height: 4),
-                                      Text('Complete deliveries to earn 500 SDG each',
+                                      Text(_s.completeDeliveriesEarn,
                                           style: GoogleFonts.inter(fontSize: 13, color: textGrey)),
                                     ],
                                   ),
@@ -398,11 +410,11 @@ class _DriverWalletScreenState extends State<DriverWalletScreen> {
                                       Icon(Icons.local_shipping_outlined,
                                           size: 48, color: textGrey.withOpacity(0.4)),
                                       const SizedBox(height: 12),
-                                      Text('No deliveries yet',
+                                      Text(_s.noDeliveriesYet,
                                           style: GoogleFonts.plusJakartaSans(
                                               fontSize: 16, fontWeight: FontWeight.w600, color: darkSlate)),
                                       const SizedBox(height: 4),
-                                      Text('Your completed deliveries will appear here',
+                                      Text(_s.completedDeliveriesHere,
                                           style: GoogleFonts.inter(fontSize: 13, color: textGrey)),
                                     ],
                                   ),
@@ -424,7 +436,8 @@ class _DriverWalletScreenState extends State<DriverWalletScreen> {
               ),
       ),
       bottomNavigationBar: _buildDriverBottomNav(context, 2),
-    );
+    ), // Scaffold
+    ); // Directionality
   }
 
   Widget _buildStatCard(String value, String label, IconData icon, Color color, Color darkSlate, Color textGrey) {
@@ -550,7 +563,7 @@ class _DriverWalletScreenState extends State<DriverWalletScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    type == 'delivery_fee' ? 'Delivery Fee' : type == 'bonus' ? 'Bonus' : 'Withdrawal',
+                    type == 'delivery_fee' ? _s.deliveryFee : type == 'bonus' ? _s.bonus : _s.withdrawal,
                     style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: darkSlate),
                   ),
                   const SizedBox(height: 2),
@@ -562,7 +575,7 @@ class _DriverWalletScreenState extends State<DriverWalletScreen> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Balance: ${_formatSDG(balanceAfter)} SDG',
+                    _s.balanceLabel(_formatSDG(balanceAfter)),
                     style: GoogleFonts.inter(fontSize: 10, color: textGrey.withOpacity(0.7)),
                   ),
                 ],
@@ -667,7 +680,7 @@ class _DriverWalletScreenState extends State<DriverWalletScreen> {
                           color: const Color(0xFF10B981).withOpacity(0.1),
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: Text('DELIVERED',
+                        child: Text(_s.deliveredBadge,
                             style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.bold, color: const Color(0xFF10B981))),
                       ),
                     ],
@@ -679,7 +692,7 @@ class _DriverWalletScreenState extends State<DriverWalletScreen> {
                   ),
                   const SizedBox(height: 2),
                   if (customerName.isNotEmpty)
-                    Text('Customer: $customerName',
+                    Text('${_s.customerPrefix}$customerName',
                         style: GoogleFonts.inter(fontSize: 11, color: textGrey)),
                   if (address.isNotEmpty)
                     Text(
@@ -701,7 +714,7 @@ class _DriverWalletScreenState extends State<DriverWalletScreen> {
                             style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF10B981)),
                           ),
                           Text(
-                            'Order: ${_formatSDG(finalAmount)} SDG',
+                            _s.orderAmountLabel(_formatSDG(finalAmount)),
                             style: GoogleFonts.inter(fontSize: 10, color: textGrey),
                           ),
                         ],
@@ -721,11 +734,12 @@ class _DriverWalletScreenState extends State<DriverWalletScreen> {
     const Color primaryColor = Color(0xFFCC5500);
     const Color inactiveGrey = Color(0xFF94A3B8);
 
+    final s = AppStrings.direct(isArabic: _isAr);
     final items = [
-      {'icon': Icons.map_rounded, 'label': 'Map', 'route': '/driver_dashboard_animated_3d'},
-      {'icon': Icons.format_list_bulleted_rounded, 'label': 'History', 'route': '/driver_delivery_history'},
-      {'icon': Icons.account_balance_wallet_rounded, 'label': 'Wallet', 'route': '/driver_wallet'},
-      {'icon': Icons.person_rounded, 'label': 'Profile', 'route': '/driver_profile'},
+      {'icon': Icons.map_rounded, 'label': s.navMap, 'route': '/driver_dashboard_animated_3d'},
+      {'icon': Icons.format_list_bulleted_rounded, 'label': s.navHistory, 'route': '/driver_delivery_history'},
+      {'icon': Icons.account_balance_wallet_rounded, 'label': s.navWallet, 'route': '/driver_wallet'},
+      {'icon': Icons.person_rounded, 'label': s.navProfile, 'route': '/driver_profile'},
     ];
 
     return Container(

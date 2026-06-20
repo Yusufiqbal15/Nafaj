@@ -544,7 +544,7 @@ class _LanguageToggle extends StatelessWidget {
             onTap: () => provider.setEnglish(),
           ),
           _LangBtn(
-            label: 'SUD',
+            label: 'ARB',
             active: isAr,
             onTap: () => provider.setArabic(),
           ),

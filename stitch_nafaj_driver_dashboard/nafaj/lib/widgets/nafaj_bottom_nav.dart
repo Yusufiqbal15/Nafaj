@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../constants.dart';
+import 'package:provider/provider.dart';
+import '../constants.dart' hide AppStrings;
+import '../providers/locale_provider.dart';
+import '../l10n/app_strings.dart';
 
 class NafajBottomNav extends StatelessWidget {
   final int currentIndex;
@@ -16,33 +19,15 @@ class NafajBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     const Color primaryColor = Color(0xFFCC5500);
     const Color unselectedColor = Color(0xFFA9A9A9);
+    final locale = Provider.of<LocaleProvider>(context);
+    final s = AppStrings.direct(isArabic: locale.isArabic);
 
     final List<_NavItem> items = [
-      _NavItem(
-        icon: Icons.home_rounded,
-        label: 'Home',
-        route: '/nafaj_home_exact_header_match',
-      ),
-      _NavItem(
-        icon: Icons.receipt_long_rounded,
-        label: 'Orders',
-        route: '/user_orders',
-      ),
-      _NavItem(
-        icon: Icons.grid_view_rounded,
-        label: 'Categories',
-        route: '/nafaj_category_grid_blinkit_style',
-      ),
-      _NavItem(
-        icon: Icons.work_rounded,
-        label: 'Jobs',
-        route: '/nafaj_job_portal_selection',
-      ),
-      _NavItem(
-        icon: Icons.person_rounded,
-        label: 'Profile',
-        route: '/nafaj_profile_management',
-      ),
+      _NavItem(icon: Icons.home_rounded, label: s.navHome, route: '/nafaj_home_exact_header_match'),
+      _NavItem(icon: Icons.receipt_long_rounded, label: s.navOrders, route: '/user_orders'),
+      _NavItem(icon: Icons.grid_view_rounded, label: s.navCategories, route: '/nafaj_category_grid_blinkit_style'),
+      _NavItem(icon: Icons.work_rounded, label: s.navJobsUser, route: '/nafaj_job_portal_selection'),
+      _NavItem(icon: Icons.person_rounded, label: s.navProfileUser, route: '/nafaj_profile_management'),
     ];
 
     return Container(

@@ -73,6 +73,11 @@ class _VendorSignUpScreenState extends State<VendorSignUpScreen> {
       _showSnack('Please fill all required fields in Step 1');
       return false;
     }
+    final rawPhone = _phoneController.text.trim().replaceAll(RegExp(r'\D'), '');
+    if (rawPhone.length < 10) {
+      _showSnack('Phone number must be at least 10 digits');
+      return false;
+    }
     if (_passwordController.text != _confirmPasswordController.text) {
       _showSnack('Passwords do not match');
       return false;
@@ -97,6 +102,11 @@ class _VendorSignUpScreenState extends State<VendorSignUpScreen> {
       _showSnack('Please fill all required shop detail fields');
       return false;
     }
+    final rawBizPhone = _businessPhoneController.text.trim().replaceAll(RegExp(r'\D'), '');
+    if (rawBizPhone.length < 10) {
+      _showSnack('Business phone must be at least 10 digits');
+      return false;
+    }
     if (!_agreedToTerms) {
       _showSnack('Please agree to Terms of Service');
       return false;
@@ -112,15 +122,7 @@ class _VendorSignUpScreenState extends State<VendorSignUpScreen> {
   Future<void> _submit() async {
     setState(() => _isLoading = true);
     try {
-      // Format phone number to Pakistani format
-      String phone = _phoneController.text.trim().replaceAll(RegExp(r'[^\d]'), '');
-      if (phone.startsWith('249')) {
-        phone = '0${phone.substring(3)}';
-      } else if (phone.startsWith('+249')) {
-        phone = '0${phone.substring(4)}';
-      } else if (!phone.startsWith('0')) {
-        phone = '0$phone';
-      }
+      String phone = _phoneController.text.trim();
 
       // Split owner name into first and last name
       final nameParts = _ownerNameController.text.trim().split(' ');
@@ -423,33 +425,10 @@ class _VendorSignUpScreenState extends State<VendorSignUpScreen> {
           const SizedBox(height: 16),
 
           _buildFieldLabel('Phone Number *', darkSlate),
-          Row(
-            children: [
-              Container(
-                width: 76,
-                height: 54,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                      color: primaryColor.withValues(alpha: 0.15)),
-                ),
-                child: Text('+249',
-                    style: GoogleFonts.inter(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: darkSlate)),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _buildTextField('912 345 678', Icons.phone_rounded,
-                    primaryColor, darkSlate,
-                    controller: _phoneController,
-                    keyboardType: TextInputType.phone),
-              ),
-            ],
-          ),
+          _buildTextField('+1234567890', Icons.phone_rounded,
+              primaryColor, darkSlate,
+              controller: _phoneController,
+              keyboardType: TextInputType.phone),
           const SizedBox(height: 16),
 
           _buildFieldLabel('Password *', darkSlate),

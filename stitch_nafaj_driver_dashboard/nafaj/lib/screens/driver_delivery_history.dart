@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../services/order_service.dart';
 import '../services/api_service.dart';
+import '../providers/locale_provider.dart';
+import '../l10n/app_strings.dart';
 
 class DriverDeliveryHistoryScreen extends StatefulWidget {
   const DriverDeliveryHistoryScreen({super.key});
@@ -19,6 +22,9 @@ class _DriverDeliveryHistoryScreenState
   List<Map<String, dynamic>> _deliveries = [];
   bool _isLoading = true;
   int? _driverId;
+
+  AppStrings _s = AppStrings.direct(isArabic: false);
+  bool _isAr = false;
 
   @override
   void initState() {
@@ -41,13 +47,13 @@ class _DriverDeliveryHistoryScreenState
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'Please login as a driver to view delivery history',
+                _s.loginAsDriverToView,
                 style: GoogleFonts.inter(color: Colors.white),
               ),
               backgroundColor: const Color(0xFFEF4444),
               behavior: SnackBarBehavior.floating,
               action: SnackBarAction(
-                label: 'Login',
+                label: _s.loginAction,
                 textColor: Colors.white,
                 onPressed: () {
                   Navigator.pushReplacementNamed(context, '/driver_login');
@@ -130,7 +136,7 @@ class _DriverDeliveryHistoryScreenState
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Error loading deliveries. Please check your connection.',
+              _s.errorLoadingDeliveries,
               style: GoogleFonts.inter(color: Colors.white),
             ),
             backgroundColor: const Color(0xFFEF4444),
@@ -143,27 +149,33 @@ class _DriverDeliveryHistoryScreenState
   }
   
   String _formatDate(String? dateStr) {
-    if (dateStr == null) return 'N/A';
-    
+    if (dateStr == null) return _s.naLabel;
+
     try {
       final date = DateTime.parse(dateStr);
       final now = DateTime.now();
       final diff = now.difference(date);
-      
+      final timeStr = '${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+
       if (diff.inDays == 0) {
-        return 'Today, ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+        return '${_s.todayPrefix}$timeStr';
       } else if (diff.inDays == 1) {
-        return 'Yesterday, ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+        return '${_s.yesterdayPrefix}$timeStr';
       } else {
-        return '${date.day} ${_getMonthName(date.month)}, ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+        return '${date.day} ${_getMonthName(date.month)}, $timeStr';
       }
     } catch (e) {
       return dateStr;
     }
   }
-  
+
   String _getMonthName(int month) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+    if (_isAr) {
+      const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+                      'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+      return months[month - 1];
+    }
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return months[month - 1];
   }
@@ -187,6 +199,10 @@ class _DriverDeliveryHistoryScreenState
 
   @override
   Widget build(BuildContext context) {
+    final localeProvider = context.watch<LocaleProvider>();
+    _s = AppStrings.direct(isArabic: localeProvider.isArabic);
+    _isAr = localeProvider.isArabic;
+
     const Color primaryColor = Color(0xFFCC5500);
     const Color bgColor = Color(0xFFFFFBF7);
     const Color darkSlate = Color(0xFF0F172A);
@@ -199,7 +215,9 @@ class _DriverDeliveryHistoryScreenState
         .where((d) => d['status'] == 'cancelled')
         .length;
 
-    return Scaffold(
+    return Directionality(
+      textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
       backgroundColor: bgColor,
       body: _isLoading
           ? const Center(
@@ -243,7 +261,7 @@ class _DriverDeliveryHistoryScreenState
                   const SizedBox(width: 16),
                   Expanded(
                     child: Text(
-                      'Delivery History',
+                      _s.deliveryHistoryTitle,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -274,7 +292,7 @@ class _DriverDeliveryHistoryScreenState
               child: Row(
                 children: [
                   _buildStatCard(
-                    'Total',
+                    _s.total,
                     '${_deliveries.length}',
                     Icons.local_shipping_rounded,
                     primaryColor,
@@ -283,7 +301,7 @@ class _DriverDeliveryHistoryScreenState
                   ),
                   const SizedBox(width: 12),
                   _buildStatCard(
-                    'Completed',
+                    _s.completed,
                     '$completedCount',
                     Icons.check_circle_rounded,
                     const Color(0xFF10B981),
@@ -292,7 +310,7 @@ class _DriverDeliveryHistoryScreenState
                   ),
                   const SizedBox(width: 12),
                   _buildStatCard(
-                    'Cancelled',
+                    _s.cancelled,
                     '$cancelledCount',
                     Icons.cancel_rounded,
                     const Color(0xFFEF4444),
@@ -342,10 +360,10 @@ class _DriverDeliveryHistoryScreenState
                 ),
                 dividerColor: Colors.transparent,
                 indicatorPadding: const EdgeInsets.all(4),
-                tabs: const [
-                  Tab(text: 'All'),
-                  Tab(text: 'Completed'),
-                  Tab(text: 'Cancelled'),
+                tabs: [
+                  Tab(text: _s.tabAll),
+                  Tab(text: _s.tabCompleted),
+                  Tab(text: _s.tabCancelled),
                 ],
               ),
             ),
@@ -366,7 +384,7 @@ class _DriverDeliveryHistoryScreenState
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'No delivery history yet',
+                            _s.noDeliveryHistory,
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 18,
                               fontWeight: FontWeight.w600,
@@ -375,7 +393,7 @@ class _DriverDeliveryHistoryScreenState
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Accept orders to see them here',
+                            _s.acceptOrdersToSee,
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               color: textGrey.withOpacity(0.7),
@@ -386,7 +404,7 @@ class _DriverDeliveryHistoryScreenState
                             onPressed: _loadDriverDeliveries,
                             icon: const Icon(Icons.refresh_rounded),
                             label: Text(
-                              'Refresh',
+                              _s.refresh,
                               style: GoogleFonts.inter(fontWeight: FontWeight.bold),
                             ),
                             style: ElevatedButton.styleFrom(
@@ -430,7 +448,8 @@ class _DriverDeliveryHistoryScreenState
 
       // ── Bottom Nav ──
       bottomNavigationBar: _buildDriverBottomNav(context, 1),
-    );
+    ), // Scaffold
+    ); // Directionality
   }
 
   Widget _buildStatCard(
@@ -501,23 +520,23 @@ class _DriverDeliveryHistoryScreenState
     
     if (isCompleted) {
       statusColor = const Color(0xFF10B981);
-      statusText = 'Completed';
+      statusText = _s.statusCompleted;
       statusIcon = Icons.check_circle_rounded;
     } else if (isCancelled) {
       statusColor = const Color(0xFFEF4444);
-      statusText = 'Cancelled';
+      statusText = _s.statusCancelled;
       statusIcon = Icons.cancel_rounded;
     } else if (isPendingConfirmation) {
-      statusColor = const Color(0xFF8B5CF6); // Purple for pending confirmation
-      statusText = 'Awaiting Confirmation';
+      statusColor = const Color(0xFF8B5CF6);
+      statusText = _s.statusAwaitingConfirmation;
       statusIcon = Icons.hourglass_empty_rounded;
     } else if (isInProgress) {
       statusColor = const Color(0xFFF59E0B);
-      statusText = 'In Progress';
+      statusText = _s.statusInProgress;
       statusIcon = Icons.local_shipping_rounded;
     } else {
       statusColor = primaryColor;
-      statusText = 'Pending';
+      statusText = _s.statusPending;
       statusIcon = Icons.pending_rounded;
     }
 
@@ -545,11 +564,10 @@ class _DriverDeliveryHistoryScreenState
             _loadDriverDeliveries();
           }
         } else if (isPendingConfirmation) {
-          // Show info that we're waiting for customer
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                '⏳ Waiting for customer to confirm delivery',
+                _s.waitingCustomerDelivery,
                 style: GoogleFonts.inter(color: Colors.white),
               ),
               backgroundColor: const Color(0xFF8B5CF6),
@@ -737,7 +755,7 @@ class _DriverDeliveryHistoryScreenState
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'Tap to continue tracking',
+                      _s.tapToContinueTracking,
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -768,7 +786,7 @@ class _DriverDeliveryHistoryScreenState
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'Waiting for customer confirmation',
+                      _s.waitingForCustomerConfirmation,
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -810,22 +828,22 @@ class _DriverDeliveryHistoryScreenState
     final items = [
       {
         'icon': Icons.map_rounded,
-        'label': 'Map',
+        'label': _s.navMap,
         'route': '/driver_dashboard_animated_3d',
       },
       {
         'icon': Icons.format_list_bulleted_rounded,
-        'label': 'History',
+        'label': _s.navHistory,
         'route': '/driver_delivery_history',
       },
       {
         'icon': Icons.account_balance_wallet_rounded,
-        'label': 'Wallet',
+        'label': _s.navWallet,
         'route': '/driver_wallet',
       },
       {
         'icon': Icons.person_rounded,
-        'label': 'Profile',
+        'label': _s.navProfile,
         'route': '/driver_profile',
       },
     ];

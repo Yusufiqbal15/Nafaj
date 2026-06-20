@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../widgets/nafaj_bottom_nav.dart';
 import 'nafaj_shop_details_screen.dart';
 import 'nafaj_marketplace_home.dart' show Shop, mockShops;
@@ -9,6 +10,8 @@ import '../services/product_service.dart';
 import '../services/api_service.dart';
 import '../models/product_model.dart' as prod_model;
 import '../config/api_config.dart';
+import '../providers/locale_provider.dart';
+import '../l10n/app_strings.dart';
 
 // Product class for display
 class Product {
@@ -75,7 +78,7 @@ class NafajHomeExactHeaderMatchScreen extends StatefulWidget {
 
 class _NafajHomeExactHeaderMatchScreenState
     extends State<NafajHomeExactHeaderMatchScreen> {
-  String selectedCategory = 'Food';
+  String selectedCategory = 'food';
   String userAddress = 'HOME - Khartoum, Riyadh, Street 15';
   final CartService _cartService = CartService();
   
@@ -168,48 +171,47 @@ class _NafajHomeExactHeaderMatchScreenState
     );
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          'Edit Address',
-          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
-        ),
-        content: TextField(
-          controller: addressController,
-          decoration: const InputDecoration(hintText: "Enter your address"),
-          style: GoogleFonts.plusJakartaSans(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+      builder: (context) {
+        final dlgS = AppStrings.direct(
+          isArabic:
+              Provider.of<LocaleProvider>(context, listen: false).isArabic,
+        );
+        return AlertDialog(
+          title: Text(
+            dlgS.editAddressTitle,
+            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold),
           ),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                userAddress = addressController.text;
-              });
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFCC5500),
+          content: TextField(
+            controller: addressController,
+            decoration: InputDecoration(hintText: dlgS.enterAddress),
+            style: GoogleFonts.plusJakartaSans(),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(dlgS.cancel),
             ),
-            child: const Text('Save', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  userAddress = addressController.text;
+                });
+                Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFCC5500),
+              ),
+              child: Text(
+                dlgS.save,
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
-  final List<Map<String, dynamic>> categories = [
-    {'name': 'Food', 'icon': Icons.restaurant_rounded, 'tag': ''},
-    {'name': 'Pharmacy', 'icon': Icons.medication_rounded, 'tag': 'Fast'},
-    {'name': 'Jobs', 'icon': Icons.work_rounded, 'tag': ''},
-    {'name': 'Classifieds', 'icon': Icons.shopping_bag_rounded, 'tag': ''},
-    {'name': 'Grocery', 'icon': Icons.local_grocery_store_rounded, 'tag': ''},
-    {'name': 'Courier', 'icon': Icons.local_shipping_rounded, 'tag': ''},
-    {'name': 'Services', 'icon': Icons.handyman_rounded, 'tag': ''},
-    {'name': 'More', 'icon': Icons.apps_rounded, 'tag': ''},
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -217,6 +219,19 @@ class _NafajHomeExactHeaderMatchScreenState
     const Color primaryLightOrange = Color(0xFFFF8C00);
     const Color bgColor = Color(0xFFF4F6F8);
     const Color darkSlate = Color(0xFF0F172A);
+    final locale = Provider.of<LocaleProvider>(context);
+    final s = AppStrings.direct(isArabic: locale.isArabic);
+
+    final List<Map<String, dynamic>> categories = [
+      {'name': s.catFood, 'icon': Icons.restaurant_rounded, 'tag': '', 'routeKey': 'food'},
+      {'name': s.catPharmacy, 'icon': Icons.medication_rounded, 'tag': s.fastTag, 'routeKey': 'pharmacy'},
+      {'name': s.catJobsHome, 'icon': Icons.work_rounded, 'tag': '', 'routeKey': 'jobs'},
+      {'name': s.catClassifieds, 'icon': Icons.shopping_bag_rounded, 'tag': '', 'routeKey': 'classifieds'},
+      {'name': s.catGrocery, 'icon': Icons.local_grocery_store_rounded, 'tag': '', 'routeKey': 'grocery'},
+      {'name': s.catCourier, 'icon': Icons.local_shipping_rounded, 'tag': '', 'routeKey': 'courier'},
+      {'name': s.catServices, 'icon': Icons.handyman_rounded, 'tag': '', 'routeKey': 'services'},
+      {'name': s.catMore, 'icon': Icons.apps_rounded, 'tag': '', 'routeKey': 'more'},
+    ];
 
     // Convert real vendors to Shop objects for display
     List<Shop> displayedShops = _vendors.map((vendor) {
@@ -269,7 +284,9 @@ class _NafajHomeExactHeaderMatchScreenState
     
     print('=== Displaying ${displayedShops.length} shops from ${_vendors.length} vendors ===');
 
-    return Scaffold(
+    return Directionality(
+      textDirection: locale.isArabic ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
       backgroundColor: bgColor,
       body: Stack(
         children: [
@@ -306,7 +323,7 @@ class _NafajHomeExactHeaderMatchScreenState
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              'Nafaj in',
+                              s.nafajIn,
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w800,
@@ -318,7 +335,7 @@ class _NafajHomeExactHeaderMatchScreenState
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 Text(
-                                  '15 minutes',
+                                  s.minutesDelivery,
                                   style: GoogleFonts.plusJakartaSans(
                                     fontSize: 28,
                                     fontWeight: FontWeight.w900,
@@ -410,6 +427,43 @@ class _NafajHomeExactHeaderMatchScreenState
                             ),
                           ),
                           const SizedBox(width: 14),
+                          GestureDetector(
+                            onTap: () {
+                              if (locale.isArabic) {
+                                locale.setEnglish();
+                              } else {
+                                locale.setArabic();
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.black.withOpacity(0.25),
+                                    Colors.black.withOpacity(0.1),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.15),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Text(
+                                locale.isArabic ? 'EN' : 'ع',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
                           Container(
                             width: 44,
                             height: 44,
@@ -466,7 +520,7 @@ class _NafajHomeExactHeaderMatchScreenState
                           Expanded(
                             child: TextField(
                               decoration: InputDecoration(
-                                hintText: 'Search "power bank"',
+                                hintText: s.searchHintHome,
                                 hintStyle: GoogleFonts.plusJakartaSans(
                                   color: Colors.grey[400],
                                   fontSize: 15,
@@ -525,17 +579,18 @@ class _NafajHomeExactHeaderMatchScreenState
                               itemBuilder: (context, index) {
                                 final cat = categories[index];
                                 final isSelected =
-                                    selectedCategory == cat['name'];
+                                    selectedCategory == cat['routeKey'];
                                 return GestureDetector(
                                   onTap: () {
-                                    if (cat['name'] == 'Jobs') {
+                                    final routeKey = cat['routeKey'] as String;
+                                    if (routeKey == 'jobs') {
                                       Navigator.pushNamed(
                                         context,
                                         '/nafaj_job_portal_selection',
                                       );
                                       return;
                                     }
-                                    if (cat['name'] == 'Courier') {
+                                    if (routeKey == 'courier') {
                                       Navigator.pushNamed(
                                         context,
                                         '/delivery_portal',
@@ -684,14 +739,14 @@ class _NafajHomeExactHeaderMatchScreenState
                               children: [
                                 Expanded(
                                   child: _buildPromoBanner(
-                                    'Fresh\nVegetables',
+                                    s.promoFreshVeg,
                                     'vegetable.jpg',
                                     const Color(0xFFE8F5E9),
                                     () => Navigator.pushNamed(
                                       context,
                                       '/category_products',
                                       arguments: {
-                                        'name': 'Grocery',
+                                        'name': s.catGrocery,
                                         'icon':
                                             Icons.local_grocery_store_rounded,
                                       },
@@ -701,14 +756,14 @@ class _NafajHomeExactHeaderMatchScreenState
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: _buildPromoBanner(
-                                    'Pharmacy\nEssentials',
+                                    s.promoPharmacyEssentials,
                                     'pharmacy.jpg',
                                     const Color(0xFFE1F5FE),
                                     () => Navigator.pushNamed(
                                       context,
                                       '/category_products',
                                       arguments: {
-                                        'name': 'Pharmacy',
+                                        'name': s.catPharmacy,
                                         'icon': Icons.medication_rounded,
                                       },
                                     ),
@@ -717,7 +772,7 @@ class _NafajHomeExactHeaderMatchScreenState
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: _buildPromoBanner(
-                                    'Delivery &\nCourier',
+                                    s.promoDeliveryCourier,
                                     'delivery.jpg',
                                     const Color(0xFFFFF3E0),
                                     () => Navigator.pushNamed(
@@ -729,7 +784,7 @@ class _NafajHomeExactHeaderMatchScreenState
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: _buildPromoBanner(
-                                    'Career &\nJobs',
+                                    s.promoCareerJobs,
                                     'jobs.jpg',
                                     const Color(0xFFF3E5F5),
                                     () => Navigator.pushNamed(
@@ -752,7 +807,7 @@ class _NafajHomeExactHeaderMatchScreenState
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Featured for You',
+                            s.featuredForYou,
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -762,7 +817,7 @@ class _NafajHomeExactHeaderMatchScreenState
                           TextButton(
                             onPressed: () {},
                             child: Text(
-                              'See all',
+                              s.seeAll,
                               style: GoogleFonts.plusJakartaSans(
                                 color: primaryDarkOrange,
                                 fontWeight: FontWeight.bold,
@@ -792,7 +847,7 @@ class _NafajHomeExactHeaderMatchScreenState
                                       ),
                                       const SizedBox(height: 8),
                                       Text(
-                                        'No products available',
+                                        s.noProductsAvailable,
                                         style: GoogleFonts.plusJakartaSans(
                                           color: Colors.grey[600],
                                           fontSize: 14,
@@ -817,9 +872,7 @@ class _NafajHomeExactHeaderMatchScreenState
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
                       child: Text(
-                        selectedCategory == 'Food'
-                            ? 'Popular Shops'
-                            : 'Shops: $selectedCategory',
+                        s.popularShops,
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -859,7 +912,7 @@ class _NafajHomeExactHeaderMatchScreenState
                                     ),
                                     const SizedBox(height: 16),
                                     Text(
-                                      'No shops available',
+                                      s.noShopsAvailable,
                                       style: GoogleFonts.plusJakartaSans(
                                         fontSize: 16,
                                         color: Colors.grey[600],
@@ -890,12 +943,10 @@ class _NafajHomeExactHeaderMatchScreenState
             bottom: 0,
             left: 0,
             right: 0,
-            child: Directionality(
-              textDirection: TextDirection.ltr,
-              child: NafajBottomNav(currentIndex: 0, onTap: (index) {}),
-            ),
+            child: NafajBottomNav(currentIndex: 0, onTap: (index) {}),
           ),
         ],
+      ),
       ),
     );
   }
@@ -1072,6 +1123,9 @@ class _NafajHomeExactHeaderMatchScreenState
   }
 
   Widget _buildAddButton(Product product, Color color) {
+    final s = AppStrings.direct(
+      isArabic: Provider.of<LocaleProvider>(context, listen: false).isArabic,
+    );
     return GestureDetector(
       onTap: () => _cartService.addItem(product.toCartProduct()),
       child: Container(
@@ -1081,7 +1135,7 @@ class _NafajHomeExactHeaderMatchScreenState
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
-          'ADD',
+          s.addBtn,
           style: GoogleFonts.plusJakartaSans(
             fontSize: 10,
             fontWeight: FontWeight.bold,
@@ -1557,6 +1611,10 @@ class _NafajHomeExactHeaderMatchScreenState
       builder: (context, _) {
         if (_cartService.items.isEmpty) return const SizedBox.shrink();
         const primaryDarkOrange = Color(0xFFCC5500);
+        final s = AppStrings.direct(
+          isArabic:
+              Provider.of<LocaleProvider>(context, listen: false).isArabic,
+        );
 
         return Positioned(
           bottom: 85,
@@ -1584,7 +1642,7 @@ class _NafajHomeExactHeaderMatchScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${_cartService.totalItems} Items',
+                      s.itemsCartCount(_cartService.totalItems),
                       style: GoogleFonts.plusJakartaSans(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -1610,7 +1668,7 @@ class _NafajHomeExactHeaderMatchScreenState
                     size: 20,
                   ),
                   label: Text(
-                    'PROCEED',
+                    s.proceedBtn,
                     style: GoogleFonts.plusJakartaSans(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,

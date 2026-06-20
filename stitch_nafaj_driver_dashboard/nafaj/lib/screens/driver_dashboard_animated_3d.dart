@@ -2,11 +2,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:provider/provider.dart';
 import 'dart:math' show cos, sqrt, asin, pi;
-import '../constants.dart';
+import '../constants.dart' hide AppStrings;
 import '../services/order_service.dart';
 import '../services/notification_service.dart';
 import '../config/api_config.dart';
+import '../providers/locale_provider.dart';
+import '../l10n/app_strings.dart';
 
 class DriverDashboardAnimated3DScreen extends StatefulWidget {
   const DriverDashboardAnimated3DScreen({super.key});
@@ -32,6 +35,9 @@ class _DriverDashboardAnimated3DScreenState
   Timer? _pollingTimer;
 
   Set<Marker> _markers = {};
+
+  AppStrings _s = AppStrings.direct(isArabic: false);
+  bool _isAr = false;
 
   @override
   void initState() {
@@ -66,13 +72,11 @@ class _DriverDashboardAnimated3DScreenState
       
       if (result['error'] != null) {
         print('   ❌ Error: ${result['error']}');
-        
-        // Show error to user
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'Connection Error: ${result['error']}',
+                '${_s.connectionErrorPrefix}${result['error']}',
                 style: GoogleFonts.inter(color: Colors.white),
               ),
               backgroundColor: const Color(0xFFEF4444),
@@ -93,10 +97,13 @@ class _DriverDashboardAnimated3DScreenState
           final brandNew = newIds.difference(_knownOrderIds);
           if (brandNew.isNotEmpty && mounted) {
             NotificationService.playOrderReceivedSound();
+            final count = brandNew.length;
             NotificationService.showOrderNotification(
               context: context,
-              title: '${brandNew.length} New Order${brandNew.length > 1 ? 's' : ''} Available!',
-              body: 'Slide to accept and start earning.',
+              title: _isAr
+                  ? '$count ${count > 1 ? 'طلبات جديدة' : 'طلب جديد'} متاحة!'
+                  : '$count New Order${count > 1 ? 's' : ''} Available!',
+              body: _isAr ? 'اسحب للقبول وابدأ الكسب.' : 'Slide to accept and start earning.',
               color: const Color(0xFFCC5500),
               icon: Icons.delivery_dining_rounded,
             );
@@ -186,12 +193,11 @@ class _DriverDashboardAnimated3DScreenState
       final result = await OrderService.acceptOrder(int.parse(orderId));
 
       if (result['success'] == true && mounted) {
-        // Play success sound on accept
         NotificationService.playSuccessSound();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Order accepted successfully! Redirecting to tracking...',
+              _s.orderAcceptedSuccess,
               style: GoogleFonts.inter(color: Colors.white),
             ),
             backgroundColor: const Color(0xFF10B981),
@@ -223,60 +229,61 @@ class _DriverDashboardAnimated3DScreenState
         }
       } else {
         if (mounted) {
-          // Check if error is about active delivery
-          String errorMessage = result['error'] ?? 'Failed to accept order';
-          
-          // Show more prominent error for active delivery
+          String errorMessage = result['error'] ?? _s.failedToAcceptOrder;
+
           if (errorMessage.contains('active delivery') || errorMessage.contains('complete it first')) {
             showDialog(
               context: context,
-              builder: (context) => AlertDialog(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                title: Row(
-                  children: [
-                    Icon(Icons.warning_rounded, color: const Color(0xFFF59E0B), size: 28),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Active Delivery',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+              builder: (ctx) => Directionality(
+                textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
+                child: AlertDialog(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  title: Row(
+                    children: [
+                      const Icon(Icons.warning_rounded, color: Color(0xFFF59E0B), size: 28),
+                      const SizedBox(width: 12),
+                      Text(
+                        _s.activeDelivery,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  content: Text(
+                    _s.activeDeliveryMessage,
+                    style: GoogleFonts.notoSansArabic(fontSize: 14),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: Text(
+                        _s.ok,
+                        style: GoogleFonts.notoSansArabic(
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFFCC5500),
+                        ),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        Navigator.pushNamed(context, '/driver_delivery_history');
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFCC5500),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        _s.viewActiveOrder,
+                        style: GoogleFonts.notoSansArabic(fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
                 ),
-                content: Text(
-                  'You already have an active delivery in progress. Please complete it before accepting a new order.',
-                  style: GoogleFonts.inter(fontSize: 14),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text(
-                      'OK',
-                      style: GoogleFonts.inter(
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFFCC5500),
-                      ),
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, '/driver_delivery_history');
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFCC5500),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: Text(
-                      'View Active Order',
-                      style: GoogleFonts.inter(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
               ),
             );
           } else {
@@ -298,7 +305,7 @@ class _DriverDashboardAnimated3DScreenState
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Error: $e',
+              '${_s.errorPrefix}$e',
               style: GoogleFonts.inter(color: Colors.white),
             ),
             backgroundColor: const Color(0xFFEF4444),
@@ -345,7 +352,7 @@ class _DriverDashboardAnimated3DScreenState
         markerId: const MarkerId('driver'),
         position: _driverLocation,
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
-        infoWindow: const InfoWindow(title: 'You are here'),
+        infoWindow: InfoWindow(title: _s.youAreHere),
       ),
     );
 
@@ -390,11 +397,17 @@ class _DriverDashboardAnimated3DScreenState
 
   @override
   Widget build(BuildContext context) {
+    final localeProvider = context.watch<LocaleProvider>();
+    _s = AppStrings.direct(isArabic: localeProvider.isArabic);
+    _isAr = localeProvider.isArabic;
+
     const Color primaryColor = Color(0xFFCC5500);
     const Color darkSlate = Color(0xFF0F172A);
     const Color textGrey = Color(0xFF475569);
 
-    return Scaffold(
+    return Directionality(
+      textDirection: _isAr ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
       backgroundColor: const Color(0xFFFFFBF7),
       bottomNavigationBar: _buildDriverBottomNav(context, 0),
       body: Column(
@@ -437,7 +450,7 @@ class _DriverDashboardAnimated3DScreenState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _isOnline ? 'Online' : 'Offline',
+                            _isOnline ? _s.online : _s.offline,
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -445,7 +458,7 @@ class _DriverDashboardAnimated3DScreenState
                             ),
                           ),
                           Text(
-                            _isOnline ? 'Ready for orders' : 'Tap to go online',
+                            _isOnline ? _s.readyForOrders : _s.tapToGoOnline,
                             style: GoogleFonts.inter(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
@@ -461,7 +474,7 @@ class _DriverDashboardAnimated3DScreenState
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(
-                            '3G NETWORK',
+                            _s.networkLabel,
                             style: GoogleFonts.inter(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
@@ -470,7 +483,7 @@ class _DriverDashboardAnimated3DScreenState
                             ),
                           ),
                           Text(
-                            'High Strength',
+                            _s.highStrength,
                             style: GoogleFonts.inter(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
@@ -520,7 +533,7 @@ class _DriverDashboardAnimated3DScreenState
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Search route or restaurant',
+                            _s.searchRouteOrRestaurant,
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               color: textGrey,
@@ -633,7 +646,7 @@ class _DriverDashboardAnimated3DScreenState
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          '${_orders.length} Active Orders',
+                          _s.activeOrdersCount(_orders.length),
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -689,7 +702,7 @@ class _DriverDashboardAnimated3DScreenState
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Available Orders',
+                          _s.availableOrders,
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -706,7 +719,7 @@ class _DriverDashboardAnimated3DScreenState
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
-                            '${_orders.length} orders',
+                            _s.ordersCount(_orders.length),
                             style: GoogleFonts.inter(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
@@ -736,7 +749,7 @@ class _DriverDashboardAnimated3DScreenState
                                 ),
                                 const SizedBox(height: 20),
                                 Text(
-                                  'Finding available orders...',
+                                  _s.findingOrders,
                                   style: GoogleFonts.plusJakartaSans(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
@@ -745,7 +758,7 @@ class _DriverDashboardAnimated3DScreenState
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  'We\'re searching for orders near you',
+                                  _s.searchingNearby,
                                   style: GoogleFonts.inter(
                                     fontSize: 13,
                                     color: textGrey,
@@ -778,7 +791,7 @@ class _DriverDashboardAnimated3DScreenState
                                     ),
                                     const SizedBox(height: 20),
                                     Text(
-                                      'No orders available',
+                                      _s.noOrdersAvailable,
                                       style: GoogleFonts.plusJakartaSans(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
@@ -787,7 +800,7 @@ class _DriverDashboardAnimated3DScreenState
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      'Orders will appear here when vendors\nconfirm their orders',
+                                      _s.ordersAppearWhenVendors,
                                       style: GoogleFonts.inter(
                                         fontSize: 13,
                                         color: textGrey,
@@ -799,7 +812,7 @@ class _DriverDashboardAnimated3DScreenState
                                       onPressed: _loadAvailableOrders,
                                       icon: const Icon(Icons.refresh),
                                       label: Text(
-                                        'Refresh',
+                                        _s.refresh,
                                         style: GoogleFonts.inter(
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -848,7 +861,8 @@ class _DriverDashboardAnimated3DScreenState
           ),
         ],
       ),
-    );
+    ), // Scaffold
+    ); // Directionality
   }
 
   Widget _buildOrderCard(
@@ -934,7 +948,7 @@ class _DriverDashboardAnimated3DScreenState
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    'EARNINGS',
+                    _s.earnings,
                     style: GoogleFonts.inter(
                       fontSize: 9,
                       fontWeight: FontWeight.bold,
@@ -1004,7 +1018,7 @@ class _DriverDashboardAnimated3DScreenState
             children: [
               _buildInfoChip(
                 Icons.location_on_outlined,
-                'Distance',
+                _s.distance,
                 order['distance'],
                 primaryColor,
                 darkSlate,
@@ -1013,7 +1027,7 @@ class _DriverDashboardAnimated3DScreenState
               const SizedBox(width: 14),
               _buildInfoChip(
                 Icons.access_time_rounded,
-                'Est. Time',
+                _s.estTime,
                 order['time'],
                 primaryColor,
                 darkSlate,
@@ -1022,7 +1036,7 @@ class _DriverDashboardAnimated3DScreenState
               const SizedBox(width: 14),
               _buildInfoChip(
                 Icons.shopping_bag_outlined,
-                'Order',
+                _s.order,
                 order['totalAmount'],
                 primaryColor,
                 darkSlate,
@@ -1118,22 +1132,22 @@ class _DriverDashboardAnimated3DScreenState
     final items = [
       {
         'icon': Icons.map_rounded,
-        'label': 'Map',
+        'label': _s.navMap,
         'route': '/driver_dashboard_animated_3d',
       },
       {
         'icon': Icons.format_list_bulleted_rounded,
-        'label': 'History',
+        'label': _s.navHistory,
         'route': '/driver_delivery_history',
       },
       {
         'icon': Icons.account_balance_wallet_rounded,
-        'label': 'Wallet',
+        'label': _s.navWallet,
         'route': '/driver_wallet',
       },
       {
         'icon': Icons.person_rounded,
-        'label': 'Profile',
+        'label': _s.navProfile,
         'route': '/driver_profile',
       },
     ];
@@ -1227,6 +1241,9 @@ class _SlideToAcceptButtonState extends State<_SlideToAcceptButton> {
   @override
   Widget build(BuildContext context) {
     const Color primaryColor = Color(0xFFCC5500);
+    final localeProvider = context.watch<LocaleProvider>();
+    final s = AppStrings.direct(isArabic: localeProvider.isArabic);
+    final isAr = localeProvider.isArabic;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -1250,11 +1267,11 @@ class _SlideToAcceptButtonState extends State<_SlideToAcceptButton> {
             ],
           ),
           child: Stack(
-            alignment: Alignment.centerLeft,
+            alignment: isAr ? Alignment.centerRight : Alignment.centerLeft,
             children: [
               Center(
                 child: Text(
-                  _isAccepted ? 'Accepted!' : 'Slide to Accept',
+                  _isAccepted ? s.accepted : s.slideToAccept,
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
@@ -1263,12 +1280,14 @@ class _SlideToAcceptButtonState extends State<_SlideToAcceptButton> {
                 ),
               ),
               Positioned(
-                left: 6 + _dragPosition,
+                left: isAr ? null : 6 + _dragPosition,
+                right: isAr ? 6 + _dragPosition : null,
                 child: GestureDetector(
                   onPanUpdate: (details) {
                     if (_isAccepted) return;
                     setState(() {
-                      _dragPosition += details.delta.dx;
+                      final delta = isAr ? -details.delta.dx : details.delta.dx;
+                      _dragPosition += delta;
                       if (_dragPosition < 0) _dragPosition = 0;
                       if (_dragPosition > maxDrag) _dragPosition = maxDrag;
                     });
@@ -1302,8 +1321,8 @@ class _SlideToAcceptButtonState extends State<_SlideToAcceptButton> {
                       color: Colors.white.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(
-                      Icons.double_arrow_rounded,
+                    child: Icon(
+                      isAr ? Icons.keyboard_double_arrow_left_rounded : Icons.double_arrow_rounded,
                       color: Colors.white,
                       size: 24,
                     ),
